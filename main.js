@@ -15,21 +15,21 @@ const manager = new THREE.LoadingManager();
 
 // Setting loading variables. Prevents errors from calling the animate function while the models are not jet loaded.
 
-// let xenon_Gate_Loaded = false;
-// let space_Loaded = false;
+let xenon_Gate_Loaded = false;
+let space_Loaded = false;
 
 var materialPhong = new THREE.MeshPhongMaterial();
 
-// manager.onLoad = function (url){
-//   if (url == './assets/models/xenon_Gate.gltf')
-//     {
-//       xenon_Gate_Loaded = true;
-//     }
-//   if (url == './assets/models/space_Sphere.gltf')
-//     {
-//       space_Loaded = true;
-//     }
-// };
+manager.onLoad = function (url){
+  if (url == './assets/models/xenon_Gate.gltf')
+    {
+      xenon_Gate_Loaded = true;
+    }
+  if (url == './assets/models/space_Sphere.gltf')
+    {
+      space_Loaded = true;
+    }
+};
 
 // HitTest settup
 
@@ -107,7 +107,7 @@ async function addObjects() {
       gate.position.set(0, 0.20, -0.3);
       gate.scale.set(0.2, 0.2, 0.2);
       scene.add(gate); // gate has two objects. gate.children[0] = Outer Ring, gate.children[1] = Inner Ring
-      // xenon_Gate_Loaded = true; // Set variable to true as soon as the model has been loaded. See animate function
+      xenon_Gate_Loaded = true; // Set variable to true as soon as the model has been loaded. See animate function
     }, undefined, function (error) {
       console.error(error);
     })
@@ -122,7 +122,7 @@ async function addObjects() {
       spaceSphere.scale.set(1, 1, 1);
       spaceSphere.rotation.set(5, 5, 5);
       scene.add(spaceSphere);
-      // space_Loaded = true; // Set variable to true as soon as the model has been loaded. See animate function
+      space_Loaded = true; // Set variable to true as soon as the model has been loaded. See animate function
     }, undefined, function (error) {
       console.error(error);
     })
@@ -159,7 +159,7 @@ async function addObjects() {
     mesh2.material.side = THREE.DoubleSide;
     // mesh2.material.opacity = 0.1;
     mesh2.scale.set(0.1, 0.1, 0.1);
-    mesh2.position.set(0, 0.2, -0.29);
+    mesh2.position.set(0, 0.2, -0.29999);
 
     scene.add(mesh2);
 
@@ -241,7 +241,7 @@ function onWindowResize() {
 // animate Function. (Calls the "animateObject" function with input)
 
 function animate() {
-  // if(gate && mesh && spaceSphere && xenon_Gate_Loaded == true && space_Loaded == true){ // Check if models are loaded.
+  if(gate && mesh && mesh2 && spaceSphere && xenon_Gate_Loaded == true && space_Loaded == true){ // Check if models are loaded.
     const currentTime = Date.now() / 1000; 
     time = currentTime;
 
@@ -265,7 +265,7 @@ function animate() {
     animateObject(mesh2, 1, 1, 0, time, "position"); // Move Portal up and down
     animateObject(mesh2, 1, 1, 0, time, "rotation"); // Rotate Portal
     animateObject(mesh2, 1, 0.005, 0, 0.15*time, "scale"); // Adjust size of the Portal
-  // } 
+  } 
 
   requestAnimationFrame(animate);
   renderer.setAnimationLoop( render );
