@@ -1,0 +1,300 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "babylon.js glTF exporter for 3dsmax 2023 v20221031.2"
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0,
+        1
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "rotation": [
+        0.0,
+        8.742278E-08,
+        0.0,
+        1.0
+      ],
+      "name": "Main_Gate"
+    },
+    {
+      "mesh": 1,
+      "translation": [
+        5.37297228E-06,
+        6.64930349E-06,
+        -3.56361873E-08
+      ],
+      "rotation": [
+        0.0,
+        0.0,
+        1.509958E-07,
+        1.0
+      ],
+      "name": "Inner_Ring"
+    }
+  ],
+  "meshes": [
+    {
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1,
+            "NORMAL": 2,
+            "TEXCOORD_0": 3
+          },
+          "indices": 0,
+          "material": 0
+        }
+      ],
+      "name": "Main_Gate"
+    },
+    {
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 5,
+            "NORMAL": 6,
+            "TEXCOORD_0": 7
+          },
+          "indices": 4,
+          "material": 0
+        }
+      ],
+      "name": "Inner_Ring"
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5123,
+      "count": 14736,
+      "type": "SCALAR",
+      "name": "accessorIndices"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 14736,
+      "max": [
+        0.8669369,
+        0.6495232,
+        0.3557676
+      ],
+      "min": [
+        -0.8669371,
+        -0.649523139,
+        -0.350314081
+      ],
+      "type": "VEC3",
+      "name": "accessorPositions"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 176832,
+      "componentType": 5126,
+      "count": 14736,
+      "type": "VEC3",
+      "name": "accessorNormals"
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 14736,
+      "type": "VEC2",
+      "name": "accessorUVs"
+    },
+    {
+      "bufferView": 0,
+      "byteOffset": 29472,
+      "componentType": 5123,
+      "count": 6096,
+      "type": "SCALAR",
+      "name": "accessorIndices"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 353664,
+      "componentType": 5126,
+      "count": 6096,
+      "max": [
+        0.5799399,
+        0.5799398,
+        0.0687020048
+      ],
+      "min": [
+        -0.5799399,
+        -0.5799398,
+        -0.068702
+      ],
+      "type": "VEC3",
+      "name": "accessorPositions"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 426816,
+      "componentType": 5126,
+      "count": 6096,
+      "type": "VEC3",
+      "name": "accessorNormals"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 117888,
+      "componentType": 5126,
+      "count": 6096,
+      "type": "VEC2",
+      "name": "accessorUVs"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 101,
+      "max": [
+        3.33333325
+      ],
+      "min": [
+        0.0
+      ],
+      "type": "SCALAR",
+      "name": "accessorAnimationInput"
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5126,
+      "count": 101,
+      "type": "VEC4",
+      "name": "accessorAnimationRotations"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 41664,
+      "name": "bufferViewScalar"
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 41664,
+      "byteLength": 499968,
+      "byteStride": 12,
+      "name": "bufferViewFloatVec3"
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 541632,
+      "byteLength": 166656,
+      "byteStride": 8,
+      "name": "bufferViewFloatVec2"
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 708288,
+      "byteLength": 404,
+      "name": "bufferViewAnimationFloatScalar"
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 708692,
+      "byteLength": 1616,
+      "name": "bufferViewAnimationFloatVec4"
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "xenon_Gate.bin",
+      "byteLength": 710308
+    }
+  ],
+  "materials": [
+    {
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 2
+        },
+        "metallicRoughnessTexture": {
+          "index": 3
+        }
+      },
+      "normalTexture": {
+        "index": 0
+      },
+      "emissiveTexture": {
+        "index": 1
+      },
+      "emissiveFactor": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "name": "xenon_Material"
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "source": 0,
+      "name": "xenon_Normal_1080.png"
+    },
+    {
+      "sampler": 0,
+      "source": 1,
+      "name": "xenon_Light_1080.png"
+    },
+    {
+      "sampler": 0,
+      "source": 2,
+      "name": "xenon_Diffuse_1080.png"
+    },
+    {
+      "sampler": 0,
+      "source": 3,
+      "name": "xenon_Specular_1080.png"
+    }
+  ],
+  "images": [
+    {
+      "uri": "textures/xenon_Normal_1080.png"
+    },
+    {
+      "uri": "textures/xenon_Light_1080.png"
+    },
+    {
+      "uri": "textures/xenon_Diffuse_1080.png"
+    },
+    {
+      "uri": "textures/xenon_Specular_1080.png"
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987
+    }
+  ],
+  "animations": [
+    {
+      "channels": [
+        {
+          "sampler": 0,
+          "target": {
+            "node": 1,
+            "path": "rotation"
+          }
+        }
+      ],
+      "samplers": [
+        {
+          "input": 8,
+          "output": 9
+        }
+      ],
+      "name": "All Animations"
+    }
+  ]
+}

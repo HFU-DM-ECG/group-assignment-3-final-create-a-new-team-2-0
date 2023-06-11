@@ -1,0 +1,22 @@
+body {
+	margin: 0;
+	overscroll-behavior: none;
+}
+
+#buttonContainer {
+    position: absolute;
+    bottom: 0;
+    text-align: center;
+    z-index: 999;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
+}
+
+#ARButton, #VRButton {
+    position: relative !important;
+    bottom: 0 !important;
+    margin-bottom: 1% !important;
+}
