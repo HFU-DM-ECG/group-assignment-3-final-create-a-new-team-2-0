@@ -7,7 +7,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 // Defining global variables
 
-let container, camera, scene, renderer, geometry, material, mesh, spaceSphere, gate, time, portal, controller, reticle;
+let container, camera, scene, renderer, geometry, material, mesh, spaceSphere, gate, time, portal, controller, reticle, portal2, mesh2, material2;
 
 // LoadingManager. Work in Progress
 
@@ -34,8 +34,6 @@ var materialPhong = new THREE.MeshPhongMaterial();
 // HitTest settup
 
 let modelLoader = new GLTFLoader(manager);
-let loader = new THREE.TextureLoader();
-let texture = loader.load('./assets/images/AlternateUniverse.png');
 
 let hitTestSource = null;
 let hitTestSourceRequested = false;
@@ -67,7 +65,7 @@ async function init() {
   scene = new THREE.Scene();
 
   camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 20 );
-  camera.position.set(0, 0, 3);
+  camera.position.set(0, 0, 0.5);
 
   const light = new THREE.DirectionalLight(0xffffff, 2);
   light.position.set(0, 10, 0);
@@ -75,7 +73,7 @@ async function init() {
 
   // Render Settup
 
-  renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true } );
+  renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true, premultipliedAlpha: false} );
   renderer.setPixelRatio( window.devicePixelRatio );
   renderer.setSize( window.innerWidth, window.innerHeight );
   renderer.xr.enabled = true;
@@ -91,7 +89,6 @@ async function init() {
 
   await addObjects(); // Call add Objects function
   animate(); // Call animate function. Will loop with empty results while the models are still loading
-  //
 
   window.addEventListener( 'resize', onWindowResize );
 
@@ -127,20 +124,16 @@ async function addObjects() {
       scene.add(spaceSphere);
       // space_Loaded = true; // Set variable to true as soon as the model has been loaded. See animate function
     }, undefined, function (error) {
-    console.error(error);
+      console.error(error);
     })
 
     // Adding the Portal
-
     portal = new THREE.CircleGeometry( 1.3, 32 ); 
     material = new THREE.ShaderMaterial({
       uniforms: {
         uTime: { value: 0 },
-        uTexture: { value: texture },
         uResolution: { value: new THREE.Vector2() },
-      },
-      vertexShader: document.getElementById("vertexShader").textContent,
-      fragmentShader: document.getElementById("fragmentShader").textContent,
+      }
     });
 
     mesh = new THREE.Mesh(portal, materialPhong.clone()); // Clones the predefined Phong material with full transparency
@@ -149,6 +142,26 @@ async function addObjects() {
     mesh.scale.set(0.1, 0.1, 0.1);
     mesh.position.set(0, 0.2, -0.3);
     scene.add(mesh);
+
+    // Adding transparent Portal
+
+    portal2 = new THREE.CircleGeometry( 1.3, 32 ); 
+    material2 = new THREE.ShaderMaterial({
+    uniforms: {
+        uTime: { value: 0 },
+        uResolution: { value: new THREE.Vector2() },
+    },
+    vertexShader: document.getElementById("vertexShader").textContent,
+    fragmentShader: document.getElementById("fragmentShader").textContent,
+    });
+
+    mesh2 = new THREE.Mesh(portal2, material2); // Clones the predefined Phong material with full transparency
+    mesh2.material.side = THREE.DoubleSide;
+    // mesh2.material.opacity = 0.1;
+    mesh2.scale.set(0.1, 0.1, 0.1);
+    mesh2.position.set(0, 0.2, -0.29);
+
+    scene.add(mesh2);
 
     // Random Planet or Star Spawner
 
@@ -231,30 +244,31 @@ function animate() {
   // if(gate && mesh && spaceSphere && xenon_Gate_Loaded == true && space_Loaded == true){ // Check if models are loaded.
     const currentTime = Date.now() / 1000; 
     time = currentTime;
-      
+
     gate.traverse( function( child ) {
       if ( child instanceof THREE.Mesh ) { 
           child.material.emissiveIntensity = Math.sin(time)*0.2+1.3; // Adjust brightness of the emission map.
           const emissiveR = Math.floor((((Math.cos(time)+1)/2)*255)); // Cycles through values from 0 to 255 for red.
           const emissiveG = Math.floor((((Math.sin(time)+1)/2)*255)); // Cycles through values from 0 to 255 for green.
           const emissiveB = Math.floor((((Math.cos(time+77.0)+1)/2)*255)); // Cycles through values from 0 to 255 for blue.
-          const emissiveRGB = "rgb(" + emissiveR + "," + emissiveG +","+ emissiveB + ")" ; // Combines the R, G and B values into one variable
-          child.material.emissive = new THREE.Color(emissiveRGB); // Adjust Color based on the RGB value
+          const emissiveRGB = "rgb(" + emissiveR + "," + emissiveG + "," + emissiveB + ")" ; // Combines the R, G and B values into one variable.
+          child.material.emissive = new THREE.Color(emissiveRGB); // Adjust Color based on the RGB value.
         }
     } );
 
     // Jumps to here if the models are not jet loaded
-  
+    animateObject(gate.children[1], 1, 1, 0, -1.5*time, "rotation"); // Rotate Inner Ring. gate.children[0] is the Outer ring of the Gate model. gate.children[1] is the inner ring.
     animateObject(gate, 1, 1, 0, time, "position"); // Move Gate up and down
     animateObject(mesh, 1, 1, 0, time, "position"); // Move Portal up and down
     animateObject(mesh, 1, 1, 0, time, "rotation"); // Rotate Portal
-    animateObject(gate.children[1], 1, 1, 0, -1.5*time, "rotation"); // Rotate Inner Ring. gate.children[0] is the Outer ring of the Gate model. gate.children[1] is the inner ring.
     animateObject(mesh, 1, 0.005, 0, 0.15*time, "scale"); // Adjust size of the Portal
+    animateObject(mesh2, 1, 1, 0, time, "position"); // Move Portal up and down
+    animateObject(mesh2, 1, 1, 0, time, "rotation"); // Rotate Portal
+    animateObject(mesh2, 1, 0.005, 0, 0.15*time, "scale"); // Adjust size of the Portal
   // } 
 
   requestAnimationFrame(animate);
   renderer.setAnimationLoop( render );
-
 }
 
 // Render function
@@ -290,9 +304,9 @@ function render( timestamp, frame ) {
       }
     }
   }
-
-  material.uniforms.uTime.value += 0.01; // increasing the Time variable each frame
-  material.uniforms.uResolution.value.set(
+  
+  material2.uniforms.uTime.value += 0.01; // increasing the Time variable each frame
+  material2.uniforms.uResolution.value.set(
     renderer.domElement.width,
     renderer.domElement.height
   );
