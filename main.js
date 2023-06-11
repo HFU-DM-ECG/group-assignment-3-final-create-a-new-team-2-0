@@ -65,7 +65,7 @@ async function init() {
   scene = new THREE.Scene();
 
   camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 20 );
-  camera.position.set(0, 0, 0.5);
+  camera.position.set(0, 0, 3);
 
   const light = new THREE.DirectionalLight(0xffffff, 2);
   light.position.set(0, 10, 0);
