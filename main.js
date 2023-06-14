@@ -128,7 +128,7 @@ async function addObjects() {
     })
 
     // Generate Portal
-    generatePortal();
+    generatePortal(0, 0.2, -0.3);
 
     // Random Planet or Star Spawner
 
@@ -170,7 +170,7 @@ async function addObjects() {
 
 // Function to create multiple layers of the Portal
 
-function generatePortal() {
+function generatePortal(_posX, _posY, _posZ) {
   // Adding the Portal
   portal = new THREE.CircleGeometry( 1.3, 32 ); 
   material = new THREE.ShaderMaterial({
@@ -184,7 +184,7 @@ function generatePortal() {
   mesh.material.side = THREE.DoubleSide;
   mesh.material.colorWrite = false; // Does not write the color of the Portal in the scene. The result is a hole in the background to the real world depending on the camera view
   mesh.scale.set(0.1, 0.1, 0.1);
-  mesh.position.set(0, 0.2, -0.3);
+  mesh.position.set(_posX, _posY, _posZ);
   scene.add(mesh);
 
 
@@ -203,7 +203,7 @@ function generatePortal() {
   meshFront = new THREE.Mesh(portalFront, materialFront); // Clones the predefined Phong material with full transparency
   meshFront.material.side = THREE.DoubleSide;
   meshFront.scale.set(0.1, 0.1, 0.1);
-  meshFront.position.set(0, 0.2, -0.29999);
+  meshFront.position.set(_posX, _posY, _posZ + 0.00001);
 
   scene.add(meshFront);
 
@@ -222,7 +222,7 @@ function generatePortal() {
   meshBack = new THREE.Mesh(portalBack, materialBack); // Clones the predefined Phong material with full transparency
   meshBack.material.side = THREE.DoubleSide;
   meshBack.scale.set(0.1, 0.1, 0.1);
-  meshBack.position.set(0, 0.2, -0.30001);
+  meshBack.position.set(_posX, _posY, _posZ - 0.00001);
 
   scene.add(meshBack);
 }
