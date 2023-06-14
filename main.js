@@ -202,7 +202,6 @@ function generatePortal() {
 
   meshFront = new THREE.Mesh(portalFront, materialFront); // Clones the predefined Phong material with full transparency
   meshFront.material.side = THREE.DoubleSide;
-  // mesh2.material.opacity = 0.1;
   meshFront.scale.set(0.1, 0.1, 0.1);
   meshFront.position.set(0, 0.2, -0.29999);
 
@@ -222,7 +221,6 @@ function generatePortal() {
 
   meshBack = new THREE.Mesh(portalBack, materialBack); // Clones the predefined Phong material with full transparency
   meshBack.material.side = THREE.DoubleSide;
-  // mesh2.material.opacity = 0.1;
   meshBack.scale.set(0.1, 0.1, 0.1);
   meshBack.position.set(0, 0.2, -0.30001);
 
@@ -293,6 +291,9 @@ function animate() {
     animateObject(meshFront, 1, 1, 0, time, "position"); // Move Portal up and down
     animateObject(meshFront, 1, 1, 0, time, "rotation"); // Rotate Portal
     animateObject(meshFront, 1, 0.005, 0, 0.15*time, "scale"); // Adjust size of the Portal
+    animateObject(meshBack, 1, 1, 0, time, "position"); // Move Portal up and down
+    animateObject(meshBack, 1, 1, 0, time, "rotation"); // Rotate Portal
+    animateObject(meshBack, 1, 0.005, 0, 0.15*time, "scale"); // Adjust size of the Portal
   } 
 
   requestAnimationFrame(animate);
