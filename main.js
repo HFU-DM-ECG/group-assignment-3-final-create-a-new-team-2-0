@@ -98,20 +98,6 @@ async function init() {
 
 async function addObjects() { 
 
-    // Adding the Gate model
-
-    gate = new THREE.Object3D();
-    modelLoader.load('./assets/models/xenon_Gate.gltf', function (gltf) { // GLTF loader
-      gate = gltf.scene;
-      gate.name = "gate";
-      gate.position.set(0, 0.20, -0.3);
-      gate.scale.set(0.2, 0.2, 0.2);
-      scene.add(gate); // gate has two objects. gate.children[0] = Outer Ring, gate.children[1] = Inner Ring
-      xenon_Gate_Loaded = true; // Set variable to true as soon as the model has been loaded. See animate function
-    }, undefined, function (error) {
-      console.error(error);
-    })
-
     // Adding the Skybox
 
     spaceSphere = new THREE.Object3D();
@@ -171,6 +157,20 @@ async function addObjects() {
 // Function to create multiple layers of the Portal
 
 function generatePortal(_posX, _posY, _posZ) {
+  // Adding the Gate model
+
+  gate = new THREE.Object3D();
+  modelLoader.load('./assets/models/xenon_Gate.gltf', function (gltf) { // GLTF loader
+    gate = gltf.scene;
+    gate.name = "gate";
+    gate.position.set(_posX, _posY, _posZ);
+    gate.scale.set(0.2, 0.2, 0.2);
+    scene.add(gate); // gate has two objects. gate.children[0] = Outer Ring, gate.children[1] = Inner Ring
+    xenon_Gate_Loaded = true; // Set variable to true as soon as the model has been loaded. See animate function
+  }, undefined, function (error) {
+    console.error(error);
+  })
+
   // Adding the Portal
   portal = new THREE.CircleGeometry( 1.3, 32 ); 
   material = new THREE.ShaderMaterial({
