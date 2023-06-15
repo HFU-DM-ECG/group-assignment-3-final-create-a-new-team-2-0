@@ -5,8 +5,14 @@ import { ARButton } from 'three/addons/webxr/ARButton.js';
 import { VRButton } from 'three/addons/webxr/VRButton.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-import vertexShader from "./shader/transparentPortal/vertexShader.js";
-import fragmentShader from "./shader/transparentPortal/fragmentShader.js";
+import vertTransparentPortal from "./shader/transparentPortal/vertexShader.js";
+import fragTransparentPortal from "./shader/transparentPortal/fragmentShader.js";
+
+import vertDimensionPortal from "./shader/dimensionPortal/vertexShader.js";
+import fragDimensionPortal from "./shader/dimensionPortal/fragmentShader.js";
+
+let loader = new THREE.TextureLoader();
+let texture = loader.load('./assets/images/uv.jpg');
 
 // Defining global variables
 
@@ -69,7 +75,8 @@ async function init() {
   scene = new THREE.Scene();
 
   camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 20 );
-  camera.position.set(0, 0, 3);
+  camera.position.set(0.5, 0, 0.1);
+  camera.rotation.y = 45;
 
   const light = new THREE.DirectionalLight(0xffffff, 2);
   light.position.set(0, 10, 0);
@@ -185,8 +192,8 @@ function generatePortal(_posX, _posY, _posZ) {
       uTime: { value: 0 },
       uResolution: { value: new THREE.Vector2() },
   },
-  vertexShader: vertexShader,
-  fragmentShader: fragmentShader,
+  vertexShader: vertTransparentPortal,
+  fragmentShader: fragTransparentPortal,
   });
 
   meshFront = new THREE.Mesh(portalFront, materialFront); // Clones the predefined Phong material with full transparency
@@ -194,18 +201,35 @@ function generatePortal(_posX, _posY, _posZ) {
   meshFront.scale.set(0.1, 0.1, 0.1);
   meshFront.position.set(_posX, _posY, _posZ + portalDifference);
 
-  scene.add(meshFront);
+  // scene.add(meshFront);
 
   // Adding transparent Portal with shader in back
+      // make sure the camera matrices are updated
+  camera.updateProjectionMatrix()
+  camera.updateMatrixWorld()
+  camera.updateWorldMatrix()
+
+  // get the matrices from the camera so they're fixed in camera's original position
+  const viewMatrixCamera = camera.matrixWorldInverse.clone()
+  const projectionMatrixCamera = camera.projectionMatrix.clone()
+  const modelMatrixCamera = camera.matrixWorld.clone()
+
+  const projPosition = camera.position.clone()
 
   portalBack = new THREE.CircleGeometry( 1.3, 32 ); 
   materialBack = new THREE.ShaderMaterial({
   uniforms: {
       uTime: { value: 0 },
       uResolution: { value: new THREE.Vector2() },
+      color: { value: new THREE.Color(0xffffff) },
+      uTexture: { value: texture },
+      viewMatrixCamera: { type: 'm4', value: viewMatrixCamera },
+      projectionMatrixCamera: { type: 'm4', value: projectionMatrixCamera },
+      modelMatrixCamera: { type: 'mat4', value: modelMatrixCamera },
+      projPosition: { type: 'v3', value: projPosition },
   },
-  vertexShader: vertexShader,
-  fragmentShader: fragmentShader,
+  vertexShader: vertDimensionPortal,
+  fragmentShader: fragDimensionPortal,
   });
 
   meshBack = new THREE.Mesh(portalBack, materialBack); // Clones the predefined Phong material with full transparency
@@ -278,7 +302,6 @@ function animate() {
     animateObject(meshFront, 1, 1, 0, time, "rotation"); // Rotate Portal
     animateObject(meshFront, 1, 0.005, 0, 0.15*time, "scale"); // Adjust size of the Portal
     animateObject(meshBack, 1, 1, 0, time, "position"); // Move Portal up and down
-    animateObject(meshBack, 1, 1, 0, time, "rotation"); // Rotate Portal
     animateObject(meshBack, 1, 0.005, 0, 0.15*time, "scale"); // Adjust size of the Portal
   } 
 
@@ -331,6 +354,17 @@ function render( timestamp, frame ) {
     renderer.domElement.width,
     renderer.domElement.height
   );
+
+  materialBack.uniforms.uTime.value += 0.01; // increasing the Time variable each frame
+  materialBack.uniforms.uResolution.value.set(
+    renderer.domElement.width,
+    renderer.domElement.height
+  );
+
+  materialBack.uniforms.viewMatrixCamera.value = camera.matrixWorldInverse.clone();
+  materialBack.uniforms.projectionMatrixCamera.value = camera.projectionMatrix.clone();
+  materialBack.uniforms.modelMatrixCamera.value = camera.matrixWorld.clone();
+  materialBack.uniforms.projPosition.value = camera.position.clone();
 
   renderer.render( scene, camera );
 }
