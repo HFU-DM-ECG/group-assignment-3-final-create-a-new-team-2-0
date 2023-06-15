@@ -5,10 +5,13 @@ import { ARButton } from 'three/addons/webxr/ARButton.js';
 import { VRButton } from 'three/addons/webxr/VRButton.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
+import vertexShader from "./shader/transparentPortal/vertexShader.js";
+import fragmentShader from "./shader/transparentPortal/fragmentShader.js";
+
 // Defining global variables
 
 let container, camera, scene, renderer, geometry, spaceSphere, gate, time, controller, reticle;
-let portalFront, meshFront, materialFront, portalBack, meshBack, materialBack, shaderPortalFront, shaderMeshFront, shaderMaterialFront, shaderPortalBack, shaderMeshBack, shaderMaterialBack;
+let portalFront, meshFront, materialFront, portalBack, meshBack, materialBack;
 
 // LoadingManager. Work in Progress
 
@@ -159,7 +162,6 @@ async function addObjects() {
 
 function generatePortal(_posX, _posY, _posZ) {
   let portalDifference = 0.00001;
-  let shaderDifference = 0.00001;
 
   // Adding the Gate model
 
@@ -175,77 +177,43 @@ function generatePortal(_posX, _posY, _posZ) {
     console.error(error);
   })
 
-  // Adding the Portal
-  portalFront = new THREE.CircleGeometry( 1.3, 32 ); 
-  materialFront = new THREE.ShaderMaterial({
-    uniforms: {
-      uTime: { value: 0 },
-      uResolution: { value: new THREE.Vector2() },
-    }
-  });
-
-  meshFront = new THREE.Mesh(portalFront, materialPhong.clone()); // Clones the predefined Phong material with full transparency
-  meshFront.material.side = THREE.DoubleSide;
-  meshFront.material.colorWrite = false; // Does not write the color of the Portal in the scene. The result is a hole in the background to the real world depending on the camera view
-  meshFront.scale.set(0.1, 0.1, 0.1);
-  meshFront.position.set(_posX, _posY, _posZ + portalDifference);
-  scene.add(meshFront);
-
-
-  // Adding the Portal 2
-  portalBack = new THREE.CircleGeometry( 1.3, 32 ); 
-  materialBack = new THREE.ShaderMaterial({
-    uniforms: {
-      uTime: { value: 0 },
-      uResolution: { value: new THREE.Vector2() },
-    }
-  });
-
-  meshBack = new THREE.Mesh(portalBack, materialPhong.clone()); // Clones the predefined Phong material with full transparency
-  meshBack.material.side = THREE.DoubleSide;
-  meshBack.material.colorWrite = false; // Does not write the color of the Portal in the scene. The result is a hole in the background to the real world depending on the camera view
-  meshBack.scale.set(0.1, 0.1, 0.1);
-  meshBack.position.set(_posX, _posY, _posZ - portalDifference);
-  scene.add(meshBack);
-
-
   // Adding transparent Portal with shader in front
 
-  shaderPortalFront = new THREE.CircleGeometry( 1.3, 32 ); 
-  shaderMaterialFront = new THREE.ShaderMaterial({
+  portalFront = new THREE.CircleGeometry( 1.3, 32 ); 
+  materialFront = new THREE.ShaderMaterial({
   uniforms: {
       uTime: { value: 0 },
       uResolution: { value: new THREE.Vector2() },
   },
-  vertexShader: document.getElementById("vertexShader").textContent,
-  fragmentShader: document.getElementById("fragmentShader").textContent,
+  vertexShader: vertexShader,
+  fragmentShader: fragmentShader,
   });
 
-  shaderMeshFront = new THREE.Mesh(shaderPortalFront, shaderMaterialFront); // Clones the predefined Phong material with full transparency
-  shaderMeshFront.material.side = THREE.DoubleSide;
-  shaderMeshFront.scale.set(0.1, 0.1, 0.1);
-  shaderMeshFront.position.set(_posX, _posY, _posZ + portalDifference + shaderDifference);
+  meshFront = new THREE.Mesh(portalFront, materialFront); // Clones the predefined Phong material with full transparency
+  meshFront.material.side = THREE.DoubleSide;
+  meshFront.scale.set(0.1, 0.1, 0.1);
+  meshFront.position.set(_posX, _posY, _posZ + portalDifference);
 
-  scene.add(shaderMeshFront);
+  scene.add(meshFront);
 
   // Adding transparent Portal with shader in back
 
-  shaderPortalBack = new THREE.CircleGeometry( 1.3, 32 ); 
-  shaderMaterialBack = new THREE.ShaderMaterial({
+  portalBack = new THREE.CircleGeometry( 1.3, 32 ); 
+  materialBack = new THREE.ShaderMaterial({
   uniforms: {
       uTime: { value: 0 },
       uResolution: { value: new THREE.Vector2() },
   },
-  vertexShader: document.getElementById("vertexShader").textContent,
-  fragmentShader: document.getElementById("fragmentShader").textContent,
+  vertexShader: vertexShader,
+  fragmentShader: fragmentShader,
   });
 
-  shaderMeshBack = new THREE.Mesh(shaderPortalBack, shaderMaterialBack); // Clones the predefined Phong material with full transparency
-  shaderMeshBack.material.side = THREE.DoubleSide;
-  shaderMeshBack.scale.set(0.1, 0.1, 0.1);
-  shaderMeshBack.position.set(_posX, _posY, _posZ - portalDifference - shaderDifference);
+  meshBack = new THREE.Mesh(portalBack, materialBack); // Clones the predefined Phong material with full transparency
+  meshBack.material.side = THREE.DoubleSide;
+  meshBack.scale.set(0.1, 0.1, 0.1);
+  meshBack.position.set(_posX, _posY, _posZ - portalDifference);
 
-  scene.add(shaderMeshBack);
+  scene.add(meshBack);
 }
 
 // Object Animation function
@@ -288,7 +256,7 @@ function onWindowResize() {
 // animate Function. (Calls the "animateObject" function with input)
 
 function animate() {
-  if(gate && meshFront && shaderMeshFront && spaceSphere && xenon_Gate_Loaded == true && space_Loaded == true){ // Check if models are loaded.
+  if(gate && meshFront && meshFront && spaceSphere && xenon_Gate_Loaded == true && space_Loaded == true){ // Check if models are loaded.
     const currentTime = Date.now() / 1000; 
     time = currentTime;
 
@@ -312,12 +280,6 @@ function animate() {
     animateObject(meshBack, 1, 1, 0, time, "position"); // Move Portal up and down
     animateObject(meshBack, 1, 1, 0, time, "rotation"); // Rotate Portal
     animateObject(meshBack, 1, 0.005, 0, 0.15*time, "scale"); // Adjust size of the Portal
-    animateObject(shaderMeshFront, 1, 1, 0, time, "position"); // Move Portal up and down
-    animateObject(shaderMeshFront, 1, 1, 0, time, "rotation"); // Rotate Portal
-    animateObject(shaderMeshFront, 1, 0.005, 0, 0.15*time, "scale"); // Adjust size of the Portal
-    animateObject(shaderMeshBack, 1, 1, 0, time, "position"); // Move Portal up and down
-    animateObject(shaderMeshBack, 1, 1, 0, time, "rotation"); // Rotate Portal
-    animateObject(shaderMeshBack, 1, 0.005, 0, 0.15*time, "scale"); // Adjust size of the Portal
   } 
 
   requestAnimationFrame(animate);
@@ -358,8 +320,14 @@ function render( timestamp, frame ) {
     }
   }
   
-  shaderMaterialFront.uniforms.uTime.value += 0.01; // increasing the Time variable each frame
-  shaderMaterialFront.uniforms.uResolution.value.set(
+  materialFront.uniforms.uTime.value += 0.01; // increasing the Time variable each frame
+  materialFront.uniforms.uResolution.value.set(
+    renderer.domElement.width,
+    renderer.domElement.height
+  );
+
+  materialBack.uniforms.uTime.value += 0.01; // increasing the Time variable each frame
+  materialBack.uniforms.uResolution.value.set(
     renderer.domElement.width,
     renderer.domElement.height
   );
