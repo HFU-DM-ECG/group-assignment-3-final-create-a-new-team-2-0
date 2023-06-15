@@ -12,8 +12,8 @@ varying vec4 vTexCoords;
 
 void main() {
   vNormal = mat3(modelMatrix) * normal;
-  vWorldPosition = modelMatrix * vec4(position, 1);
-  vTexCoords = viewMatrixCamera * vWorldPosition;
+  vWorldPosition = modelMatrix * vec4(position, 1.0);
+  vTexCoords = projectionMatrixCamera * viewMatrixCamera * vWorldPosition;
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }
 

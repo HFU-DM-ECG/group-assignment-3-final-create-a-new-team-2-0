@@ -75,7 +75,7 @@ async function init() {
   scene = new THREE.Scene();
 
   camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 20 );
-  camera.position.set(0, 0.2, -0.1);
+  camera.position.set(0, 0, 1);
 
   const light = new THREE.DirectionalLight(0xffffff, 2);
   light.position.set(0, 10, 0);
@@ -200,7 +200,7 @@ function generatePortal(_posX, _posY, _posZ) {
   meshFront.scale.set(0.1, 0.1, 0.1);
   meshFront.position.set(_posX, _posY, _posZ + portalDifference);
 
-  // scene.add(meshFront);
+  scene.add(meshFront);
 
   // Adding transparent Portal with shader in back
   camera.updateProjectionMatrix()
@@ -293,13 +293,13 @@ function animate() {
     } );
 
     // Jumps to here if the models are not jet loaded
-    // animateObject(gate.children[1], 1, 1, 0, -1.5*time, "rotation"); // Rotate Inner Ring. gate.children[0] is the Outer ring of the Gate model. gate.children[1] is the inner ring.
-    // animateObject(gate, 1, 1, 0, time, "position"); // Move Gate up and down
-    // animateObject(meshFront, 1, 1, 0, time, "position"); // Move Portal up and down
-    // animateObject(meshFront, 1, 1, 0, time, "rotation"); // Rotate Portal
-    // animateObject(meshFront, 1, 0.005, 0, 0.15*time, "scale"); // Adjust size of the Portal
-    // animateObject(meshBack, 1, 1, 0, time, "position"); // Move Portal up and down
-    // animateObject(meshBack, 1, 0.005, 0, 0.15*time, "scale"); // Adjust size of the Portal
+    animateObject(gate.children[1], 1, 1, 0, -1.5*time, "rotation"); // Rotate Inner Ring. gate.children[0] is the Outer ring of the Gate model. gate.children[1] is the inner ring.
+    animateObject(gate, 1, 1, 0, time, "position"); // Move Gate up and down
+    animateObject(meshFront, 1, 1, 0, time, "position"); // Move Portal up and down
+    animateObject(meshFront, 1, 1, 0, time, "rotation"); // Rotate Portal
+    animateObject(meshFront, 1, 0.005, 0, 0.15*time, "scale"); // Adjust size of the Portal
+    animateObject(meshBack, 1, 1, 0, time, "position"); // Move Portal up and down
+    animateObject(meshBack, 1, 0.005, 0, 0.15*time, "scale"); // Adjust size of the Portal
   } 
 
   requestAnimationFrame(animate);
@@ -347,7 +347,6 @@ function render( timestamp, frame ) {
   );
 
   materialBack.uniforms.uTime.value += 0.01; // increasing the Time variable each frame
-
   materialBack.uniforms.viewMatrixCamera.value = camera.matrixWorldInverse.clone();
   materialBack.uniforms.projectionMatrixCamera.value = camera.projectionMatrix.clone();
   materialBack.uniforms.modelMatrixCamera.value = camera.matrixWorld.clone();
