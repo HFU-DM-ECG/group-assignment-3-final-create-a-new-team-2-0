@@ -75,8 +75,7 @@ async function init() {
   scene = new THREE.Scene();
 
   camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 20 );
-  camera.position.set(0.5, 0, 0.1);
-  camera.rotation.y = 45;
+  camera.position.set(0, 0, 1);
 
   const light = new THREE.DirectionalLight(0xffffff, 2);
   light.position.set(0, 10, 0);
@@ -201,10 +200,9 @@ function generatePortal(_posX, _posY, _posZ) {
   meshFront.scale.set(0.1, 0.1, 0.1);
   meshFront.position.set(_posX, _posY, _posZ + portalDifference);
 
-  // scene.add(meshFront);
+  scene.add(meshFront);
 
   // Adding transparent Portal with shader in back
-      // make sure the camera matrices are updated
   camera.updateProjectionMatrix()
   camera.updateMatrixWorld()
   camera.updateWorldMatrix()
