@@ -19,7 +19,7 @@ let texture = loader.load('./assets/images/uv.jpg');
 let container, camera, scene, renderer, geometry, spaceSphere, gate, time, controller, reticle;
 let portalFront, meshFront, materialFront, portalBack, meshBack, materialBack;
 
-// LoadingManager. Work in Progress
+// LoadingManager.
 
 const manager = new THREE.LoadingManager();
 manager.onStart = function ( url, itemsLoaded, itemsTotal ) {
@@ -27,21 +27,12 @@ manager.onStart = function ( url, itemsLoaded, itemsTotal ) {
 };
 
 // Setting loading variables. Prevents errors from calling the animate function while the models are not jet loaded.
-
-let xenon_Gate_Loaded = false;
-let space_Loaded = false;
+let models_Loaded = false;
 
 var materialPhong = new THREE.MeshPhongMaterial();
 
 manager.onLoad = function (url){
-  if (url == './assets/models/xenon_Gate.gltf')
-    {
-      xenon_Gate_Loaded = true;
-    }
-  if (url == './assets/models/space_Sphere.gltf')
-    {
-      space_Loaded = true;
-    }
+  models_Loaded = true;
     console.log( 'Loading complete!');
 };
 
@@ -133,7 +124,6 @@ async function addObjects() {
       spaceSphere.scale.set(1, 1, 1);
       spaceSphere.rotation.set(5, 5, 5);
       scene.add(spaceSphere);
-      space_Loaded = true; // Set variable to true as soon as the model has been loaded. See animate function
     }, undefined, function (error) {
       console.error(error);
     })
@@ -193,7 +183,6 @@ function generatePortal(_posX, _posY, _posZ) {
     gate.position.set(_posX, _posY, _posZ);
     gate.scale.set(0.2, 0.2, 0.2);
     scene.add(gate); // gate has two objects. gate.children[0] = Outer Ring, gate.children[1] = Inner Ring
-    xenon_Gate_Loaded = true; // Set variable to true as soon as the model has been loaded. See animate function
   }, undefined, function (error) {
     console.error(error);
   })
@@ -292,7 +281,7 @@ function onWindowResize() {
 // animate Function. (Calls the "animateObject" function with input)
 
 function animate() {
-  if(gate && meshFront && meshFront && spaceSphere && xenon_Gate_Loaded == true && space_Loaded == true){ // Check if models are loaded.
+  if(models_Loaded == true){ // Check if models are loaded.
     const currentTime = Date.now() / 1000; 
     time = currentTime;
 
