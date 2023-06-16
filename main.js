@@ -22,6 +22,9 @@ let portalFront, meshFront, materialFront, portalBack, meshBack, materialBack;
 // LoadingManager. Work in Progress
 
 const manager = new THREE.LoadingManager();
+manager.onStart = function ( url, itemsLoaded, itemsTotal ) {
+  console.log( 'Started loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
+};
 
 // Setting loading variables. Prevents errors from calling the animate function while the models are not jet loaded.
 
@@ -39,7 +42,19 @@ manager.onLoad = function (url){
     {
       space_Loaded = true;
     }
+    console.log( 'Loading complete!');
 };
+
+// Check of all loaded files during progress.
+manager.onProgress = function ( url, itemsLoaded, itemsTotal ) {
+	console.log( 'Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
+};
+
+// Print error if any objects aren't loaded yet.
+manager.onError = function ( url ) {
+	console.log( 'There was an error loading ' + url );
+};
+
 
 // HitTest settup
 
