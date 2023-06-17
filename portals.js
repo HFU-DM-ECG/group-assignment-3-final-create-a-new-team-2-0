@@ -17,7 +17,9 @@ let texture = loader.load('./assets/images/uv.jpg');
 // Defining global variables
 
 let container, camera, scene, scene2, renderer, geometry, spaceSphere, gate, time, controller, reticle;
-let portalFront, meshFront, materialFront, portalBack, meshBack, materialBack, renderTarget;
+let portalFront, meshFront, materialFront, portalBack, meshBack, materialBack, renderTarget, skyboxScene;
+
+let portalMode = 0;
 
 // LoadingManager.
 
@@ -102,13 +104,29 @@ async function init() {
     document.getElementById("buttonContainer").appendChild( VRButton.createButton( renderer ) );
     document.getElementById("ARButton").addEventListener("click", () => xr_mode = "ar");
     document.getElementById("VRButton").addEventListener("click", () => xr_mode = "vr");
-    
 
     await addObjects(); // Call add Objects function
+    await switchScene(portalMode);
     animate(); // Call animate function. Will loop with empty results while the models are still loading
 
     window.addEventListener( 'resize', onWindowResize );
 
+}
+
+async function switchScene(_mode) {
+    switch (_mode) {
+        case 0:
+            skyboxScene = scene;
+            scene.add(meshFront);
+            break;
+        case 1:
+            skyboxScene = scene2;
+            scene.add(meshBack);
+            break;
+        default:
+            switchScene(0);
+            break;
+    }
 }
 
 // Adding the static objects
@@ -116,6 +134,7 @@ async function init() {
 async function addObjects() { 
 
     // Adding the Skybox
+    skyboxScene = scene;
 
     spaceSphere = new THREE.Object3D();
     modelLoader.load('./assets/models/space_Sphere.gltf', function (gltf) { // GLTF loader
@@ -124,7 +143,7 @@ async function addObjects() {
       spaceSphere.position.set(0, 0, 0);
       spaceSphere.scale.set(1, 1, 1);
       spaceSphere.rotation.set(5, 5, 5);
-      scene2.add(spaceSphere);
+      skyboxScene.add(spaceSphere);
     }, undefined, function (error) {
       console.error(error);
     })
@@ -217,7 +236,7 @@ function generatePortal(_posX, _posY, _posZ) {
     meshBack.scale.set(0.1, 0.1, 0.1);
     meshBack.position.set(_posX, _posY, _posZ - portalDifference);
 
-    scene.add(meshBack);
+    // scene.add(meshBack);
 }
 
 // Object Animation function
