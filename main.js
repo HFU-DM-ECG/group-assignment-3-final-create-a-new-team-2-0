@@ -94,7 +94,6 @@ async function init() {
   renderer.setPixelRatio( window.devicePixelRatio );
   renderer.setSize( window.innerWidth, window.innerHeight );
   renderer.xr.enabled = true;
-  renderer.autoClear = false;
   container.appendChild( renderer.domElement );
 
   // User Interface
@@ -285,6 +284,12 @@ function animate() {
     animateObject(meshBack, 1, 1, 0, time, "position"); // Move Portal up and down
     animateObject(meshBack, 1, 0.005, 0, 0.15*time, "scale"); // Adjust size of the Portal
   } 
+  renderer.setRenderTarget(renderTarget);
+  renderer.render( scene2, camera );
+
+  // Render the main scene normally
+  renderer.setRenderTarget(null);
+  renderer.render( scene, camera );
 
   requestAnimationFrame(animate);
   renderer.setAnimationLoop( render );
@@ -330,10 +335,5 @@ function render( timestamp, frame ) {
     renderer.domElement.height
   );
 
-  renderer.setRenderTarget(renderTarget);
-  renderer.render( scene2, camera );
-
-  // Render the main scene normally
-  renderer.setRenderTarget(null);
   renderer.render( scene, camera );
 }
