@@ -16,8 +16,8 @@ let texture = loader.load('./assets/images/uv.jpg');
 
 // Defining global variables
 
-let container, camera, scene, renderer, geometry, spaceSphere, gate, time, controller, reticle;
-let portalFront, meshFront, materialFront, portalBack, meshBack, materialBack;
+let container, camera, scene, scene2, renderer, geometry, spaceSphere, gate, time, controller, reticle;
+let portalFront, meshFront, materialFront, portalBack, meshBack, materialBack, renderTarget;
 
 // LoadingManager.
 
@@ -79,6 +79,7 @@ async function init() {
   // Scene Settup
 
   scene = new THREE.Scene();
+  scene2 = new THREE.Scene();
 
   camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 20 );
   camera.position.set(0, 0, 1);
@@ -93,6 +94,7 @@ async function init() {
   renderer.setPixelRatio( window.devicePixelRatio );
   renderer.setSize( window.innerWidth, window.innerHeight );
   renderer.xr.enabled = true;
+  renderer.autoClear = false;
   container.appendChild( renderer.domElement );
 
   // User Interface
@@ -123,7 +125,7 @@ async function addObjects() {
       spaceSphere.position.set(0, 0, 0);
       spaceSphere.scale.set(1, 1, 1);
       spaceSphere.rotation.set(5, 5, 5);
-      scene.add(spaceSphere);
+      scene2.add(spaceSphere);
     }, undefined, function (error) {
       console.error(error);
     })
@@ -204,37 +206,15 @@ function generatePortal(_posX, _posY, _posZ) {
   meshFront.scale.set(0.1, 0.1, 0.1);
   meshFront.position.set(_posX, _posY, _posZ + portalDifference);
 
-  scene.add(meshFront);
+  // scene.add(meshFront);
 
-  // Adding transparent Portal with shader in back
-  camera.updateProjectionMatrix()
-  camera.updateMatrixWorld()
-  camera.updateWorldMatrix()
-
-  // get the matrices from the camera so they're fixed in camera's original position
-  const viewMatrixCamera = camera.matrixWorldInverse.clone()
-  const projectionMatrixCamera = camera.projectionMatrix.clone()
-  const modelMatrixCamera = camera.matrixWorld.clone()
-
-  const projPosition = camera.position.clone()
+  renderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
 
   portalBack = new THREE.CircleGeometry( 1.3, 32 ); 
-  materialBack = new THREE.ShaderMaterial({
-  uniforms: {
-      uTime: { value: 0 },
-      color: { value: new THREE.Color(0xffffff) },
-      uTexture: { value: texture },
-      viewMatrixCamera: { type: 'm4', value: viewMatrixCamera },
-      projectionMatrixCamera: { type: 'm4', value: projectionMatrixCamera },
-      modelMatrixCamera: { type: 'mat4', value: modelMatrixCamera },
-      projPosition: { type: 'v3', value: projPosition },
-  },
-  vertexShader: vertDimensionPortal,
-  fragmentShader: fragDimensionPortal,
-  });
+  materialBack = new THREE.MeshBasicMaterial({ map: renderTarget.texture, side: THREE.DoubleSide });
 
   meshBack = new THREE.Mesh(portalBack, materialBack); // Clones the predefined Phong material with full transparency
-  meshBack.material.side = THREE.DoubleSide;
+  // meshBack.material.side = THREE.DoubleSide;
   meshBack.scale.set(0.1, 0.1, 0.1);
   meshBack.position.set(_posX, _posY, _posZ - portalDifference);
 
@@ -350,11 +330,10 @@ function render( timestamp, frame ) {
     renderer.domElement.height
   );
 
-  materialBack.uniforms.uTime.value += 0.01; // increasing the Time variable each frame
-  materialBack.uniforms.viewMatrixCamera.value = camera.matrixWorldInverse.clone();
-  materialBack.uniforms.projectionMatrixCamera.value = camera.projectionMatrix.clone();
-  materialBack.uniforms.modelMatrixCamera.value = camera.matrixWorld.clone();
-  materialBack.uniforms.projPosition.value = camera.position.clone();
+  renderer.setRenderTarget(renderTarget);
+  renderer.render( scene2, camera );
 
+  // Render the main scene normally
+  renderer.setRenderTarget(null);
   renderer.render( scene, camera );
 }
