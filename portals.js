@@ -8,18 +8,16 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import vertTransparentPortal from "./shader/transparentPortal/vertexShader.js";
 import fragTransparentPortal from "./shader/transparentPortal/fragmentShader.js";
 
-import vertDimensionPortal from "./shader/dimensionPortal/vertexShader.js";
-import fragDimensionPortal from "./shader/dimensionPortal/fragmentShader.js";
-
-let loader = new THREE.TextureLoader();
-let texture = loader.load('./assets/images/uv.jpg');
-
 // Defining global variables
 
-let container, camera, scene, scene2, renderer, geometry, spaceSphere, gate, time, controller, reticle;
-let portalFront, meshFront, materialFront, portalBack, meshBack, materialBack, renderTarget, skyboxScene;
+let container, camera, scene, renderer, geometry, spaceSphere, gate, time, controller, reticle;
+let portalFront, meshFront, materialFront, portalBack, meshBack, materialBack;
 
-let portalMode = 0;
+let stencilRef = 1;
+
+let world_material = true;
+let portalFront_material = false;
+let portalBack_material = true;
 
 // LoadingManager.
 
@@ -31,7 +29,7 @@ manager.onStart = function ( url, itemsLoaded, itemsTotal ) {
 // Setting loading variables. Prevents errors from calling the animate function while the models are not jet loaded.
 let models_Loaded = false;
 
-var materialPhong = new THREE.MeshPhongMaterial();
+// var materialPhong = new THREE.MeshPhongMaterial();
 
 manager.onLoad = function (url){
     models_Loaded = true;
@@ -81,7 +79,7 @@ async function init() {
     // Scene Settup
 
     scene = new THREE.Scene();
-    scene2 = new THREE.Scene();
+    // scene2 = new THREE.Scene();
 
     camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 20 );
     camera.position.set(0, 0, 1);
@@ -106,27 +104,11 @@ async function init() {
     document.getElementById("VRButton").addEventListener("click", () => xr_mode = "vr");
 
     await addObjects(); // Call add Objects function
-    await switchScene(portalMode);
+
     animate(); // Call animate function. Will loop with empty results while the models are still loading
 
     window.addEventListener( 'resize', onWindowResize );
 
-}
-
-async function switchScene(_mode) {
-    switch (_mode) {
-        case 0:
-            skyboxScene = scene;
-            scene.add(meshFront);
-            break;
-        case 1:
-            skyboxScene = scene2;
-            scene.add(meshBack);
-            break;
-        default:
-            switchScene(0);
-            break;
-    }
 }
 
 // Adding the static objects
@@ -134,7 +116,6 @@ async function switchScene(_mode) {
 async function addObjects() { 
 
     // Adding the Skybox
-    skyboxScene = scene;
 
     spaceSphere = new THREE.Object3D();
     modelLoader.load('./assets/models/space_Sphere.gltf', function (gltf) { // GLTF loader
@@ -143,7 +124,8 @@ async function addObjects() {
       spaceSphere.position.set(0, 0, 0);
       spaceSphere.scale.set(1, 1, 1);
       spaceSphere.rotation.set(5, 5, 5);
-      skyboxScene.add(spaceSphere);
+
+      scene.add(spaceSphere);
     }, undefined, function (error) {
       console.error(error);
     })
@@ -192,7 +174,7 @@ async function addObjects() {
 // Function to create multiple layers of the Portal
 
 function generatePortal(_posX, _posY, _posZ) {
-    let portalDifference = 0.00001;
+    let portalDifference = 0.02;
 
     // Adding the Gate model
 
@@ -224,19 +206,23 @@ function generatePortal(_posX, _posY, _posZ) {
     meshFront.scale.set(0.1, 0.1, 0.1);
     meshFront.position.set(_posX, _posY, _posZ + portalDifference);
 
-    // scene.add(meshFront);
-
-    renderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight);
+    scene.add(meshFront);
 
     portalBack = new THREE.CircleGeometry( 1.3, 32 ); 
-    materialBack = new THREE.MeshBasicMaterial({ map: renderTarget.texture, side: THREE.DoubleSide });
+    materialBack = new THREE.MeshBasicMaterial({color: 0xffffff});
+
+    materialBack.depthWrite = false;
+    materialBack.stencilWrite = true;
+    materialBack.stencilRef = stencilRef;
+    materialBack.stencilFunc = THREE.AlwaysStencilFunc;
+    materialBack.stencilZPass = THREE.ReplaceStencilOp;
 
     meshBack = new THREE.Mesh(portalBack, materialBack); // Clones the predefined Phong material with full transparency
-    // meshBack.material.side = THREE.DoubleSide;
+    meshBack.material.side = THREE.DoubleSide;
     meshBack.scale.set(0.1, 0.1, 0.1);
     meshBack.position.set(_posX, _posY, _posZ - portalDifference);
 
-    // scene.add(meshBack);
+    scene.add(meshBack);
 }
 
 // Object Animation function
@@ -292,24 +278,70 @@ function animate() {
         } );
 
         // Jumps to here if the models are not jet loaded
-        animateObject(gate.children[1], 1, 1, 0, -1.5*time, "rotation"); // Rotate Inner Ring. gate.children[0] is the Outer ring of the Gate model. gate.children[1] is the inner ring.
-        animateObject(gate, 1, 1, 0, time, "position"); // Move Gate up and down
-        animateObject(meshFront, 1, 1, 0, time, "position"); // Move Portal up and down
-        animateObject(meshFront, 1, 1, 0, time, "rotation"); // Rotate Portal
-        animateObject(meshFront, 1, 0.005, 0, 0.15*time, "scale"); // Adjust size of the Portal
-        animateObject(meshBack, 1, 1, 0, time, "position"); // Move Portal up and down
-        animateObject(meshBack, 1, 0.005, 0, 0.15*time, "scale"); // Adjust size of the Portal
-    } 
-    renderer.setRenderTarget(renderTarget);
-    renderer.render( scene2, camera );
+        // animateObject(gate.children[1], 1, 1, 0, -1.5*time, "rotation"); // Rotate Inner Ring. gate.children[0] is the Outer ring of the Gate model. gate.children[1] is the inner ring.
+        // animateObject(gate, 1, 1, 0, time, "position"); // Move Gate up and down
+        // animateObject(meshFront, 1, 1, 0, time, "position"); // Move Portal up and down
+        // animateObject(meshFront, 1, 1, 0, time, "rotation"); // Rotate Portal
+        // animateObject(meshFront, 1, 0.005, 0, 0.15*time, "scale"); // Adjust size of the Portal
+        // animateObject(meshBack, 1, 1, 0, time, "position"); // Move Portal up and down
+        // animateObject(meshBack, 1, 0.005, 0, 0.15*time, "scale"); // Adjust size of the Portal
 
-    // Render the main scene normally
-    renderer.setRenderTarget(null);
+        switchPortals();
+    } 
     renderer.render( scene, camera );
 
     requestAnimationFrame(animate);
     renderer.setAnimationLoop( render );
 }
+
+function switchPortals() {
+
+    if (world_material == true) {
+        spaceSphere.traverse( function( child ) {
+            if ( child instanceof THREE.Mesh ) { 
+                child.material.stencilWrite = true;
+                child.material.stencilRef = stencilRef;
+                child.material.stencilFunc = THREE.EqualStencilFunc;
+                }
+            } );
+    }
+
+    if ( portalFront_material == true ) {
+        materialFront.depthWrite = false;
+        materialFront.stencilWrite = true;
+        materialFront.stencilRef = stencilRef;
+        materialFront.stencilFunc = THREE.AlwaysStencilFunc;
+        materialFront.stencilZPass = THREE.ReplaceStencilOp;
+    } else {
+        materialFront = new THREE.ShaderMaterial({
+            uniforms: {
+                uTime: { value: time },
+                uResolution: { value: new THREE.Vector2() },
+            },
+            vertexShader: vertTransparentPortal,
+            fragmentShader: fragTransparentPortal,
+        });
+    }
+
+    if ( portalBack_material == true ) {
+        materialBack.depthWrite = false;
+        materialBack.stencilWrite = true;
+        materialBack.stencilRef = stencilRef;
+        materialBack.stencilFunc = THREE.AlwaysStencilFunc;
+        materialBack.stencilZPass = THREE.ReplaceStencilOp;
+    } else {
+        materialBack = new THREE.ShaderMaterial({
+            uniforms: {
+                uTime: { value: time },
+                uResolution: { value: new THREE.Vector2() },
+            },
+            vertexShader: vertTransparentPortal,
+            fragmentShader: fragTransparentPortal,
+        });
+    }
+
+}
+
 
 // Render function
 
@@ -345,11 +377,19 @@ function render( timestamp, frame ) {
         }
     }
     
-    materialFront.uniforms.uTime.value += 0.01; // increasing the Time variable each frame
-    materialFront.uniforms.uResolution.value.set(
-        renderer.domElement.width,
-        renderer.domElement.height
-    );
+
+        // materialFront.uniforms.uTime.value += 0.01; 
+        // materialFront.uniforms.uResolution.value.set(
+        //     renderer.domElement.width,
+        //     renderer.domElement.height
+        // );
+    
+
+        // materialBack.uniforms.uTime.value += 0.01; 
+        // materialBack.uniforms.uResolution.value.set(
+        //     renderer.domElement.width,
+        //     renderer.domElement.height
+        // );
 
     renderer.render( scene, camera );
 }
