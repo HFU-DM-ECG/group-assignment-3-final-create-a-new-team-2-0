@@ -19,7 +19,7 @@ let world_material = true;
 let portalFront_material = false;
 let portalBack_material = true;
 
-// LoadingManager.
+// LoadingManager
 
 const manager = new THREE.LoadingManager();
 manager.onStart = function ( url, itemsLoaded, itemsTotal ) {
@@ -296,7 +296,7 @@ function animate() {
 
 function switchPortals() {
 
-    if (world_material == true) {
+    if (world_material == false) {
         spaceSphere.traverse( function( child ) {
             if ( child instanceof THREE.Mesh ) { 
                 child.material.stencilWrite = true;
