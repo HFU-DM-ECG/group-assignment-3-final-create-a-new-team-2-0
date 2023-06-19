@@ -11,6 +11,7 @@ import fragTransparentPortal from "./shader/transparentPortal/fragmentShader.js"
 // Defining global variables
 
 let container, camera, scene, renderer, geometry, spaceSphere, gate, time, controller, reticle;
+let hitFrontOut, hitFrontIn, hitBackOut, hitBackIn, hitCenter, cameraPosition; 
 let portalFront, meshFront, materialFront, portalBack, meshBack, materialBack;
 
 let stencilRef = 1;
@@ -183,7 +184,7 @@ function generatePortal(_posX, _posY, _posZ) {
         gate = gltf.scene;
         gate.name = "gate";
         gate.position.set(_posX, _posY, _posZ);
-        gate.scale.set(0.2, 0.2, 0.2);
+        gate.scale.set(0.4, 0.4, 0.4);
         scene.add(gate); // gate has two objects. gate.children[0] = Outer Ring, gate.children[1] = Inner Ring
     }, undefined, function (error) {
         console.error(error);
@@ -203,7 +204,7 @@ function generatePortal(_posX, _posY, _posZ) {
 
     meshFront = new THREE.Mesh(portalFront, materialFront); // Clones the predefined Phong material with full transparency
     meshFront.material.side = THREE.DoubleSide;
-    meshFront.scale.set(0.1, 0.1, 0.1);
+    meshFront.scale.set(0.16, 0.16, 0.16);
     meshFront.position.set(_posX, _posY, _posZ + portalDifference);
 
     scene.add(meshFront);
@@ -219,10 +220,104 @@ function generatePortal(_posX, _posY, _posZ) {
 
     meshBack = new THREE.Mesh(portalBack, materialBack); // Clones the predefined Phong material with full transparency
     meshBack.material.side = THREE.DoubleSide;
-    meshBack.scale.set(0.1, 0.1, 0.1);
+    meshBack.scale.set(0.16, 0.16, 0.16);
     meshBack.position.set(_posX, _posY, _posZ - portalDifference);
 
     scene.add(meshBack);
+
+    // Adding Hitboxes
+
+    hitFrontOut = new THREE.Object3D();
+    modelLoader.load('./assets/models/hitbox.glb', function (gltf) { // GLTF loader
+        hitFrontOut  = gltf.scene;
+        hitFrontOut.name = "hitFrontOut";
+        hitFrontOut.position.set(_posX, _posY, _posZ + portalDifference + 0.006);
+        hitFrontOut.scale.set(1, 1, 0.6);    
+        hitFrontOut.traverse((object)=>{
+            if(object.material){
+                object.material.transparent = true;
+                object.material.opacity = 0.1;
+                object.material.side = THREE.DoubleSide;
+            }
+        });
+        scene.add(hitFrontOut);
+        }, undefined, function (error) {
+            console.error(error);
+        })
+
+    hitFrontIn = new THREE.Object3D();
+    modelLoader.load('./assets/models/hitbox.glb', function (gltf) { // GLTF loader
+        hitFrontIn  = gltf.scene;
+        hitFrontIn.name = "hitFrontIn";
+        hitFrontIn.position.set(_posX, _posY, _posZ + portalDifference - 0.006);
+        hitFrontIn.scale.set(1, 1, 0.6);    
+        hitFrontIn.traverse((object)=>{
+            if(object.material){
+                object.material.transparent = true;
+                object.material.opacity = 0.1;
+                object.material.side = THREE.DoubleSide;
+            }
+        });
+        scene.add(hitFrontIn);
+        }, undefined, function (error) {
+            console.error(error);
+        })    
+
+
+    hitBackOut = new THREE.Object3D();
+    modelLoader.load('./assets/models/hitbox.glb', function (gltf) { // GLTF loader
+        hitBackOut  = gltf.scene;
+        hitBackOut.name = "hitBackOut";
+        hitBackOut.position.set(_posX, _posY, _posZ - portalDifference - 0.006);
+        hitBackOut.scale.set(1, 1, 0.6);    
+        hitBackOut.traverse((object)=>{
+            if(object.material){
+                object.material.transparent = true;
+                object.material.opacity = 0.1;
+                object.material.side = THREE.DoubleSide;
+            }
+        });
+        scene.add(hitBackOut);
+        }, undefined, function (error) {
+            console.error(error);
+        })
+
+    hitBackIn = new THREE.Object3D();
+    modelLoader.load('./assets/models/hitbox.glb', function (gltf) { // GLTF loader
+        hitBackIn  = gltf.scene;
+        hitBackIn.name = "hitFrontIn";
+        hitBackIn.position.set(_posX, _posY, _posZ - portalDifference + 0.006);
+        hitBackIn.scale.set(1, 1, 0.6);    
+        hitBackIn.traverse((object)=>{
+            if(object.material){
+                object.material.transparent = true;
+                object.material.opacity = 0.1;
+                object.material.side = THREE.DoubleSide;
+            }
+        });
+        scene.add(hitBackIn);
+        }, undefined, function (error) {
+            console.error(error);
+        })   
+        
+    hitCenter = new THREE.Object3D();
+    modelLoader.load('./assets/models/hitbox.glb', function (gltf) { // GLTF loader
+        hitCenter  = gltf.scene;
+        hitCenter.name = "hitCenter";
+        hitCenter.position.set(_posX, _posY, _posZ);
+        hitCenter.scale.set(1, 1, 1);    
+        hitCenter.traverse((object)=>{
+            if(object.material){
+                object.material.transparent = true;
+                object.material.opacity = 0.1;
+                object.material.side = THREE.DoubleSide;
+            }
+        });
+        scene.add(hitCenter);
+        }, undefined, function (error) {
+            console.error(error);
+        })       
+
 }
 
 // Object Animation function
@@ -281,10 +376,12 @@ function animate() {
         // animateObject(gate.children[1], 1, 1, 0, -1.5*time, "rotation"); // Rotate Inner Ring. gate.children[0] is the Outer ring of the Gate model. gate.children[1] is the inner ring.
         // animateObject(gate, 1, 1, 0, time, "position"); // Move Gate up and down
         // animateObject(meshFront, 1, 1, 0, time, "position"); // Move Portal up and down
-        // animateObject(meshFront, 1, 1, 0, time, "rotation"); // Rotate Portal
+        animateObject(meshFront, 1, 1, 0, time, "rotation"); // Rotate Portal
         // animateObject(meshFront, 1, 0.005, 0, 0.15*time, "scale"); // Adjust size of the Portal
         // animateObject(meshBack, 1, 1, 0, time, "position"); // Move Portal up and down
         // animateObject(meshBack, 1, 0.005, 0, 0.15*time, "scale"); // Adjust size of the Portal
+
+        checkIntersection();
 
         switchPortals();
     } 
@@ -293,6 +390,22 @@ function animate() {
     requestAnimationFrame(animate);
     renderer.setAnimationLoop( render );
 }
+
+function checkIntersection (){
+    const raycaster = new THREE.Raycaster();
+
+    raycaster.set(camera.position, new THREE.Vector3(1,1,1));
+    const intersects = raycaster.intersectObject(hitFrontOut);
+    if (intersects.length %2 ===1) {
+        console.log('camera is in Hitbox Front Outside')
+    }
+
+}
+
+function hitFrontInLogic(){
+
+}
+
 
 function switchPortals() {
 
