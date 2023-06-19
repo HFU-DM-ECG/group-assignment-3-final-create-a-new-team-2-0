@@ -131,7 +131,7 @@ async function addObjects() {
     })
 
     // Generate Portal
-    generatePortal(0, 0.2, -0.3);
+    generatePortal(0, 0, -0.3);
 
     // Random Planet or Star Spawner
 
