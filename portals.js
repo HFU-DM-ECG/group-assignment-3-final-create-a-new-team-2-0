@@ -12,7 +12,7 @@ import fragTransparentPortal from "./shader/transparentPortal/fragmentShader.js"
 
 let container, camera, scene, renderer, geometry, spaceSphere, gate, time, controller, reticle;
 let hitFrontOut, hitFrontIn, hitBackOut, hitBackIn, hitCenter; 
-let portalFront, meshFront, materialFront, portalBack, meshBack, materialBack;
+let portalFront, meshFront, materialFront, portalBack, meshBack, materialBack, realMat, spaceMat;
 let cameFromFront = true;
 let cameFromBack = true;
 let stencilRef = 1;
@@ -194,7 +194,7 @@ function generatePortal(_posX, _posY, _posZ) {
     // Adding transparent Portal with shader in front
 
     portalFront = new THREE.CircleGeometry( 1.3, 32 ); 
-    materialFront = new THREE.ShaderMaterial({
+    realMat = new THREE.ShaderMaterial({
     uniforms: {
         uTime: { value: 0 },
         uResolution: { value: new THREE.Vector2() },
@@ -203,7 +203,20 @@ function generatePortal(_posX, _posY, _posZ) {
     fragmentShader: fragTransparentPortal,
     });
 
-    meshFront = new THREE.Mesh(portalFront, materialFront); // Clones the predefined Phong material with full transparency
+    realMat.depthWrite = true;
+    realMat.stencilWrite = false;
+    realMat.stencilFunc = THREE.AlwaysStencilFunc;
+    realMat.stencilZPass = THREE.ReplaceStencilOp;
+
+    spaceMat = new THREE.MeshBasicMaterial({color: 0xffffff});
+
+    spaceMat.depthWrite = false;
+    spaceMat.stencilWrite = true;
+    spaceMat.stencilRef = stencilRef;
+    spaceMat.stencilFunc = THREE.AlwaysStencilFunc;
+    spaceMat.stencilZPass = THREE.ReplaceStencilOp;
+
+    meshFront = new THREE.Mesh(portalFront, realMat); // Clones the predefined Phong material with full transparency
     meshFront.material.side = THREE.DoubleSide;
     meshFront.scale.set(0.16, 0.16, 0.16);
     meshFront.position.set(_posX, _posY, _posZ + portalDifference);
@@ -459,44 +472,19 @@ function switchPortals() {
     }
 
     if ( portalFront_material == true ) {
-        materialFront.depthWrite = false;
-        materialFront.stencilWrite = true;
-        materialFront.stencilRef = stencilRef;
-        materialFront.stencilFunc = THREE.AlwaysStencilFunc;
-        materialFront.stencilZPass = THREE.ReplaceStencilOp;
+        meshFront.material = spaceMat;
+        meshFront.material.side = THREE.DoubleSide;
     } else {
-        materialFront.depthWrite = true;
-        materialFront.stencilWrite = false;
-        materialFront.stencilRef = stencilRef;
-        materialFront.side = THREE.DoubleSide;
-        materialFront = new THREE.ShaderMaterial({
-            uniforms: {
-                uTime: { value: time },
-                uResolution: { value: new THREE.Vector2() },
-            },
-            vertexShader: vertTransparentPortal,
-            fragmentShader: fragTransparentPortal,
-        });
+        meshFront.material = realMat;
+        meshFront.material.side = THREE.DoubleSide;
     }
 
     if ( portalBack_material == true ) {
-        materialBack.depthWrite = false;
-        materialBack.stencilWrite = true;
-        materialBack.stencilRef = stencilRef;
-        materialBack.stencilFunc = THREE.AlwaysStencilFunc;
-        materialBack.stencilZPass = THREE.ReplaceStencilOp;
+        meshBack.material = spaceMat;
+        meshBack.material.side = THREE.DoubleSide;
     } else {
-        materialBack.depthWrite = true;
-        materialBack.stencilWrite = false;
-        materialBack.stencilRef = stencilRef;
-        materialBack = new THREE.ShaderMaterial({
-            uniforms: {
-                uTime: { value: time },
-                uResolution: { value: new THREE.Vector2() },
-            },
-            vertexShader: vertTransparentPortal,
-            fragmentShader: fragTransparentPortal,
-        });
+        meshBack.material = realMat;
+        meshBack.material.side = THREE.DoubleSide;
     }
 
 }
