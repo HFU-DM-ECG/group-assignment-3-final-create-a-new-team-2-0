@@ -375,6 +375,11 @@ function animate() {
         // animateObject(meshBack, 1, 1, 0, time, "position"); // Move Portal up and down
         // animateObject(meshBack, 1, 0.005, 0, 0.15*time, "scale"); // Adjust size of the Portal
 
+        // Animations for the hitboxes
+        animateObject(hitFrontOut, 1, 0.3, 0, time, "position");
+        animateObject(hitBackOut, 1, 0.3, 0, time, "position"); 
+        animateObject(hitCenter, 1, 0.3, 0, time, "position");
+
         // Checks the position of the camera and the intersection with the hitboxes so it can switch the portals right in the next line
         checkIntersection();
         switchPortals();
