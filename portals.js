@@ -11,14 +11,15 @@ import fragTransparentPortal from "./shader/transparentPortal/fragmentShader.js"
 // Defining global variables
 
 let container, camera, scene, renderer, geometry, spaceSphere, gate, time, controller, reticle;
-let hitFrontOut, hitFrontIn, hitBackOut, hitBackIn, hitCenter, cameraPosition; 
+let hitFrontOut, hitFrontIn, hitBackOut, hitBackIn, hitCenter; 
 let portalFront, meshFront, materialFront, portalBack, meshBack, materialBack;
-
+let cameFromFront = true;
+let cameFromBack = true;
 let stencilRef = 1;
 
 let world_material = true;
 let portalFront_material = false;
-let portalBack_material = true;
+let portalBack_material = false;
 
 // LoadingManager
 
@@ -175,7 +176,7 @@ async function addObjects() {
 // Function to create multiple layers of the Portal
 
 function generatePortal(_posX, _posY, _posZ) {
-    let portalDifference = 0.02;
+    let portalDifference = 0.0;
 
     // Adding the Gate model
 
@@ -223,7 +224,7 @@ function generatePortal(_posX, _posY, _posZ) {
     meshBack.scale.set(0.16, 0.16, 0.16);
     meshBack.position.set(_posX, _posY, _posZ - portalDifference);
 
-    scene.add(meshBack);
+    // scene.add(meshBack);
 
     // Adding Hitboxes
 
@@ -231,8 +232,8 @@ function generatePortal(_posX, _posY, _posZ) {
     modelLoader.load('./assets/models/hitbox.glb', function (gltf) { // GLTF loader
         hitFrontOut  = gltf.scene;
         hitFrontOut.name = "hitFrontOut";
-        hitFrontOut.position.set(_posX, _posY, _posZ + portalDifference + 0.006);
-        hitFrontOut.scale.set(1, 1, 0.6);    
+        hitFrontOut.position.set(_posX, _posY, _posZ + 0.02);
+        hitFrontOut.scale.set(1, 1, 2);    
         hitFrontOut.traverse((object)=>{
             if(object.material){
                 object.material.transparent = true;
@@ -245,31 +246,12 @@ function generatePortal(_posX, _posY, _posZ) {
             console.error(error);
         })
 
-    hitFrontIn = new THREE.Object3D();
-    modelLoader.load('./assets/models/hitbox.glb', function (gltf) { // GLTF loader
-        hitFrontIn  = gltf.scene;
-        hitFrontIn.name = "hitFrontIn";
-        hitFrontIn.position.set(_posX, _posY, _posZ + portalDifference - 0.006);
-        hitFrontIn.scale.set(1, 1, 0.6);    
-        hitFrontIn.traverse((object)=>{
-            if(object.material){
-                object.material.transparent = true;
-                object.material.opacity = 0.1;
-                object.material.side = THREE.DoubleSide;
-            }
-        });
-        scene.add(hitFrontIn);
-        }, undefined, function (error) {
-            console.error(error);
-        })    
-
-
     hitBackOut = new THREE.Object3D();
     modelLoader.load('./assets/models/hitbox.glb', function (gltf) { // GLTF loader
         hitBackOut  = gltf.scene;
         hitBackOut.name = "hitBackOut";
-        hitBackOut.position.set(_posX, _posY, _posZ - portalDifference - 0.006);
-        hitBackOut.scale.set(1, 1, 0.6);    
+        hitBackOut.position.set(_posX, _posY, _posZ - 0.02);
+        hitBackOut.scale.set(1, 1, 2);    
         hitBackOut.traverse((object)=>{
             if(object.material){
                 object.material.transparent = true;
@@ -282,41 +264,26 @@ function generatePortal(_posX, _posY, _posZ) {
             console.error(error);
         })
 
-    hitBackIn = new THREE.Object3D();
-    modelLoader.load('./assets/models/hitbox.glb', function (gltf) { // GLTF loader
-        hitBackIn  = gltf.scene;
-        hitBackIn.name = "hitFrontIn";
-        hitBackIn.position.set(_posX, _posY, _posZ - portalDifference + 0.006);
-        hitBackIn.scale.set(1, 1, 0.6);    
-        hitBackIn.traverse((object)=>{
-            if(object.material){
-                object.material.transparent = true;
-                object.material.opacity = 0.1;
-                object.material.side = THREE.DoubleSide;
-            }
-        });
-        scene.add(hitBackIn);
-        }, undefined, function (error) {
-            console.error(error);
-        })   
-        
     hitCenter = new THREE.Object3D();
     modelLoader.load('./assets/models/hitbox.glb', function (gltf) { // GLTF loader
         hitCenter  = gltf.scene;
         hitCenter.name = "hitCenter";
         hitCenter.position.set(_posX, _posY, _posZ);
-        hitCenter.scale.set(1, 1, 1);    
+        hitCenter.scale.set(1, 1, 5);    
         hitCenter.traverse((object)=>{
             if(object.material){
                 object.material.transparent = true;
-                object.material.opacity = 0.1;
+                object.material.opacity = 0.0;
                 object.material.side = THREE.DoubleSide;
             }
         });
         scene.add(hitCenter);
         }, undefined, function (error) {
             console.error(error);
-        })       
+        })
+
+
+   
 
 }
 
@@ -395,17 +362,81 @@ function checkIntersection (){
     const raycaster = new THREE.Raycaster();
 
     raycaster.set(camera.position, new THREE.Vector3(1,1,1));
-    const intersects = raycaster.intersectObject(hitFrontOut);
-    if (intersects.length %2 ===1) {
-        console.log('camera is in Hitbox Front Outside')
+    const intersectsFrontOut = raycaster.intersectObject(hitFrontOut);
+    if (intersectsFrontOut.length %2 ===1) {
+        if(world_material==true){
+            cameFromFront = false;
+        };
+        if(world_material==false){
+            cameFromFront = true;
+        };
+        hitFrontOutLogic();
+    }
+    const intersectsBackOut = raycaster.intersectObject(hitBackOut);
+    if (intersectsBackOut.length %2 ===1) {
+        if(world_material==true){
+            cameFromBack = false;
+        };
+        if(world_material==false){
+            cameFromBack = true;
+        };
+        hitBackOutLogic();
+    }
+    const intersectsCenter = raycaster.intersectObject(hitCenter);
+    if (intersectsCenter.length %2 ===1) {
+        hitCenterLogic();
+        console.log('camera is near the Portal');
     }
 
+    if(intersectsCenter.length %2 !==1 && intersectsBackOut.length %2 !==1 && intersectsFrontOut.length %2 !==1) {
+        resetLogic();
+    }
+
+
 }
 
-function hitFrontInLogic(){
-
+function hitFrontOutLogic(){
+  
+    if(cameFromBack==false && cameFromFront == false){
+        world_material = false;
+        portalFront_material = true;
+    };
+    if(cameFromBack==true && cameFromFront == true){
+        world_material = true;
+        portalFront_material = false;
+    };
 }
 
+function hitBackOutLogic(){
+    if(cameFromBack==false && cameFromFront == false){
+        world_material = false;
+        portalFront_material = true;
+    };
+    if(cameFromBack==true && cameFromFront == true){
+        world_material = true;
+        portalFront_material = false;
+    };
+}
+
+function hitCenterLogic(){
+    console.log('cameFromBack ' + cameFromBack);
+    console.log('cameFromFront ' + cameFromFront);
+    console.log('Portal ' + portalFront_material);
+}
+
+function resetLogic(){
+    console.log('resetting Logic');
+    if(world_material==true){
+        cameFromFront = true;
+        cameFromBack = true;
+        portalFront_material = false;
+    };
+    if(world_material==false){
+        cameFromFront = false;
+        cameFromBack = false;
+        portalFront_material = true;
+    };
+}
 
 function switchPortals() {
 
@@ -413,6 +444,14 @@ function switchPortals() {
         spaceSphere.traverse( function( child ) {
             if ( child instanceof THREE.Mesh ) { 
                 child.material.stencilWrite = true;
+                child.material.stencilRef = stencilRef;
+                child.material.stencilFunc = THREE.EqualStencilFunc;
+                }
+            } );
+    } else {
+        spaceSphere.traverse( function( child ) {
+            if ( child instanceof THREE.Mesh ) { 
+                child.material.stencilWrite = false;
                 child.material.stencilRef = stencilRef;
                 child.material.stencilFunc = THREE.EqualStencilFunc;
                 }
@@ -426,6 +465,10 @@ function switchPortals() {
         materialFront.stencilFunc = THREE.AlwaysStencilFunc;
         materialFront.stencilZPass = THREE.ReplaceStencilOp;
     } else {
+        materialFront.depthWrite = true;
+        materialFront.stencilWrite = false;
+        materialFront.stencilRef = stencilRef;
+        materialFront.side = THREE.DoubleSide;
         materialFront = new THREE.ShaderMaterial({
             uniforms: {
                 uTime: { value: time },
@@ -443,6 +486,9 @@ function switchPortals() {
         materialBack.stencilFunc = THREE.AlwaysStencilFunc;
         materialBack.stencilZPass = THREE.ReplaceStencilOp;
     } else {
+        materialBack.depthWrite = true;
+        materialBack.stencilWrite = false;
+        materialBack.stencilRef = stencilRef;
         materialBack = new THREE.ShaderMaterial({
             uniforms: {
                 uTime: { value: time },
