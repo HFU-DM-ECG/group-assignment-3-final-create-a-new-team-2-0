@@ -1,24 +1,37 @@
-// Three JS and AR Settup
+// Three JS and AR Setup
 
 import * as THREE from 'three';
 import { ARButton } from 'three/addons/webxr/ARButton.js';
 import { VRButton } from 'three/addons/webxr/VRButton.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
+// Import shaders from other files
+
 import vertTransparentPortal from "./shader/transparentPortal/vertexShader.js";
 import fragTransparentPortal from "./shader/transparentPortal/fragmentShader.js";
 
-// Defining global variables
+// Shader for the old portal where the scene got rendered on the material of the portal (wip: we don't use this approach anymore)
+// import vertDimensionPortal from "./shader/dimensionPortal/vertexShader.js";
+// import fragDimensionPortal from "./shader/dimensionPortal/fragmentShader.js";
 
-let container, camera, scene, renderer, geometry, spaceSphere, gate, time, controller, reticle;
+// Defining global variables
+let container, camera, scene, light, renderer, geometry, spaceSphere, gate, time, controller, reticle;
+
+// Defining hit variables
 let hitFrontOut, hitFrontIn, hitBackOut, hitBackIn, hitCenter; 
+
+// Defining portal variables
 let portalFront, meshFront, portalBack, meshBack, realMat, spaceMat;
 
+
+// Defining booleans for switching the material
 let world_material = true;
 let portalFront_material = false;
 let portalBack_material = false;
 let cameFromFront = true;
 let cameFromBack = true;
+
+
 let stencilRef = 1;
 
 // LoadingManager
@@ -31,8 +44,8 @@ manager.onStart = function ( url, itemsLoaded, itemsTotal ) {
 // Setting loading variables. Prevents errors from calling the animate function while the models are not jet loaded.
 let models_Loaded = false;
 
-// var materialPhong = new THREE.MeshPhongMaterial();
 
+// Loading Manager sets models Loaded to true so the animation won't start before every model is loaded.
 manager.onLoad = function (url){
     models_Loaded = true;
     console.log( 'Loading complete!');
@@ -48,17 +61,14 @@ manager.onError = function ( url ) {
     console.log( 'There was an error loading ' + url );
 };
 
-
-// HitTest settup
-
 let modelLoader = new GLTFLoader(manager);
 
+// HitTest settup
 let hitTestSource = null;
 let hitTestSourceRequested = false;
 let xr_mode = "xr";
 
 // Random Model array
-
 let randomModels = [
 "./assets/models/portalmodel.glb", 
 "./assets/models/star_of_sun.glb", 
@@ -78,47 +88,45 @@ async function init() {
     container = document.createElement( 'div' );
     document.body.appendChild( container );
 
-    // Scene Settup
-
+    // Scene Setup
     scene = new THREE.Scene();
-    // scene2 = new THREE.Scene();
 
+    // Camera Setup
     camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 20 );
     camera.position.set(0, 0, 1);
 
-    const light = new THREE.DirectionalLight(0xffffff, 2);
+    // Light Setup
+    light = new THREE.DirectionalLight(0xffffff, 2);
     light.position.set(0, 10, 0);
     scene.add(light);
 
-    // Render Settup
-
+    // Render Setup: Sets the WebGLRenderer with antialias, alpha and premultiplied alpha on true. It initializes the size, pixelratio and enables the xr mode.
     renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true, premultipliedAlpha: false} );
     renderer.setPixelRatio( window.devicePixelRatio );
     renderer.setSize( window.innerWidth, window.innerHeight );
     renderer.xr.enabled = true;
     container.appendChild( renderer.domElement );
 
-    // User Interface
-
+    // Creates the buttons in the html div and add event listener to switch between the xr mode ar and vr.
     document.getElementById("buttonContainer").appendChild( ARButton.createButton( renderer, { requiredFeatures: [ 'hit-test' ] } ) );
     document.getElementById("buttonContainer").appendChild( VRButton.createButton( renderer ) );
     document.getElementById("ARButton").addEventListener("click", () => xr_mode = "ar");
     document.getElementById("VRButton").addEventListener("click", () => xr_mode = "vr");
 
-    await addObjects(); // Call add Objects function
+    // Call add Objects function to place all needed objects in the world before continuing
+    await addObjects(); 
 
-    animate(); // Call animate function. Will loop with empty results while the models are still loading
+    // Call animate function. Will loop with empty results while the models are still loading
+    animate(); 
 
+    // Adjust the window if it gets resized
     window.addEventListener( 'resize', onWindowResize );
-
 }
 
 // Adding the static objects
-
 async function addObjects() { 
 
     // Adding the Skybox
-
     spaceSphere = new THREE.Object3D();
     modelLoader.load('./assets/models/space_Sphere.gltf', function (gltf) { // GLTF loader
       spaceSphere = gltf.scene;
@@ -126,44 +134,45 @@ async function addObjects() {
       spaceSphere.position.set(0, 0, 0);
       spaceSphere.scale.set(1, 1, 1);
       spaceSphere.rotation.set(5, 5, 5);
-
       scene.add(spaceSphere);
     }, undefined, function (error) {
       console.error(error);
     })
 
-    // Generate Portal
+    // Generate Portal with the given coordinates
     generatePortal(0, 0, -0.5);
 
     // Random Planet or Star Spawner
-
     geometry = new THREE.Object3D();
+        // This function gets called if you tap the screen.
         function onSelect() {
 
-          if ( reticle.visible ) {
+            // Places a random model with random properties if the hitmarker is visible (means it found an intersection in the real world)
+            if ( reticle.visible ) {
+                let randomScale = Math.random() * 0.1;
+                let randomRotate = Math.random() * 360;
 
-            let randomScale = Math.random() * 0.1;
-            let randomRotate = Math.random() * 360;
+                geometry = new THREE.Object3D();
+                    modelLoader.load(randomModels[Math.floor(Math.random() * randomModels.length)], function (gltf) {
+                        geometry.add(gltf.scene.children[0]);
+                        geometry.name = "random_model";
+                        reticle.matrix.decompose( geometry.position, geometry.quaternion, geometry.scale );
 
-            geometry = new THREE.Object3D();
-                modelLoader.load(randomModels[Math.floor(Math.random() * randomModels.length)], function (gltf) {
-                    geometry.add(gltf.scene.children[0]);
-                    geometry.name = "random_model";
-                    reticle.matrix.decompose( geometry.position, geometry.quaternion, geometry.scale );
-
-                    geometry.scale.set(randomScale, randomScale, randomScale);
-                    geometry.rotation.set(randomRotate, randomRotate, randomRotate);
-                    scene.add(geometry);
-            }, undefined, function (error) {
-                console.error(error);
-            })
-          }
+                        geometry.scale.set(randomScale, randomScale, randomScale);
+                        geometry.rotation.set(randomRotate, randomRotate, randomRotate);
+                        scene.add(geometry);
+                }, undefined, function (error) {
+                    console.error(error);
+                })
+            }
         }
 
+        // Sets the xr controller (screen tap) and add the function to be called if gets triggered
         controller = renderer.xr.getController( 0 );
         controller.addEventListener( 'select', onSelect );
         scene.add( controller );
 
+        // Creates the hitmarker object that is hidden in the beginning
         reticle = new THREE.Mesh(
           new THREE.RingGeometry( 0.15, 0.2, 32 ).rotateX( - Math.PI / 2 ),
           new THREE.MeshBasicMaterial()
@@ -173,27 +182,28 @@ async function addObjects() {
         scene.add( reticle );
 }
 
-// Function to create multiple layers of the Portal
-
+// Function to create multiple layers of the Portal (wip: one portal because the stencil breaks the second portal and we couldn't fix it)
 function generatePortal(_posX, _posY, _posZ) {
+    // sets a difference between the multiple layers (wip: because we have just one portal we don't need a difference and place it right in the middle)
     let portalDifference = 0.0;
 
-    // Adding the Gate model
-
+    // Adding the gate model
     gate = new THREE.Object3D();
     modelLoader.load('./assets/models/xenon_Gate.gltf', function (gltf) { // GLTF loader
         gate = gltf.scene;
         gate.name = "gate";
         gate.position.set(_posX, _posY, _posZ);
         gate.scale.set(0.4, 0.4, 0.4);
-        scene.add(gate); // gate has two objects. gate.children[0] = Outer Ring, gate.children[1] = Inner Ring
+        // gate has two objects. gate.children[0] = Outer Ring, gate.children[1] = Inner Ring
+        scene.add(gate); 
     }, undefined, function (error) {
         console.error(error);
     })
 
-    // Adding transparent Portal with shader in front
-
+    // Adding front portal with shader for wobble portal effects (wip: creates two different materials so we can switch between them later and initialize the real world)
     portalFront = new THREE.CircleGeometry( 1.3, 32 ); 
+
+    // Real world shader with wobble effects which doesn't render the material so nothing gets rendered here and we can look through into the real world
     realMat = new THREE.ShaderMaterial({
     uniforms: {
         uTime: { value: 0 },
@@ -203,11 +213,17 @@ function generatePortal(_posX, _posY, _posZ) {
     fragmentShader: fragTransparentPortal,
     });
 
+    // Disables the stencils in case it gets switched back again so it gets deactivated
     realMat.depthWrite = true;
     realMat.stencilWrite = false;
     realMat.stencilFunc = THREE.AlwaysStencilFunc;
     realMat.stencilZPass = THREE.ReplaceStencilOp;
 
+
+    // Space material with activated stencil so it creates a stencil of this shape on another object (in this case in stencils the skybox so only the stencil is visible on this material, but not the rest)
+    // It gets often used for portal effects: 
+    // "Other rendering techniques, such as portal rendering, use the stencil buffer in other ways; for example, it can be used to find the area of the screen obscured by a portal and re-render those pixels correctly."
+    // see https://en.wikipedia.org/wiki/Stencil_buffer () and https://en.wikipedia.org/wiki/Portal_rendering
     spaceMat = new THREE.MeshBasicMaterial({color: 0xffffff});
 
     spaceMat.depthWrite = false;
@@ -223,6 +239,8 @@ function generatePortal(_posX, _posY, _posZ) {
 
     scene.add(meshFront);
 
+
+    // Portal in the back with little difference so you could stay between both and look into both dimensions. (wip: its now deactivated because the effect didn't worked as we intended)
     portalBack = new THREE.CircleGeometry( 1.3, 32 ); 
 
     meshBack = new THREE.Mesh(portalBack, spaceMat); // Clones the predefined Phong material with full transparency
@@ -232,8 +250,7 @@ function generatePortal(_posX, _posY, _posZ) {
 
     // scene.add(meshBack);
 
-    // Adding Hitboxes
-
+    // Adding Hitboxes so it switches the materials of the portals and skybox right (depending which direction you came from)
     hitFrontOut = new THREE.Object3D();
     modelLoader.load('./assets/models/hitbox.glb', function (gltf) { // GLTF loader
         hitFrontOut  = gltf.scene;
@@ -293,8 +310,7 @@ function generatePortal(_posX, _posY, _posZ) {
 
 }
 
-// Object Animation function
-
+// Object Animation function with given attributes to get the wished animation
 function animateObject(object, freq, amplitude, delay, currentTime, transform) { 
     switch (transform) { // Input of the "transform" variable. Changes the animation type depending on the input
         case "position": // Change in Position
@@ -320,7 +336,6 @@ function animateObject(object, freq, amplitude, delay, currentTime, transform) {
 }
 
 // Resizing the window refreshes the scene with new aspect ratio
-
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
@@ -328,12 +343,14 @@ function onWindowResize() {
     renderer.setSize( window.innerWidth, window.innerHeight );
 }
 
-// animate Function. (Calls the "animateObject" function with input)
+// animate Function (calls the "animateObject" function with given attributes)
 function animate() {
-    if(models_Loaded == true){ // Check if models are loaded.
+    // Checks if models are loaded and then starts the animation so all animations are synced.
+    if(models_Loaded == true){ 
         const currentTime = Date.now() / 1000; 
         time = currentTime;
 
+        // Changes the colors of the gate with help of the sinus and cosinus curves.
         gate.traverse( function( child ) {
         if ( child instanceof THREE.Mesh ) { 
             child.material.emissiveIntensity = Math.sin(time)*0.2+1.3; // Adjust brightness of the emission map.
@@ -345,25 +362,33 @@ function animate() {
             }
         } );
 
-        // Jumps to here if the models are not jet loaded
-        animateObject(gate.children[1], 1, 1, 0, -0.5*time, "rotation"); // Rotate Inner Ring. gate.children[0] is the Outer ring of the Gate model. gate.children[1] is the inner ring.
-        // animateObject(gate, 1, 1, 0, time, "position"); // Move Gate up and down
-        // animateObject(meshFront, 1, 1, 0, time, "position"); // Move Portal up and down
+        // Animations for the gate model
+        animateObject(gate.children[1], 1, 1, 0, -0.5 * time, "rotation"); // Rotate Inner Ring. gate.children[0] is the Outer ring of the Gate model. gate.children[1] is the inner ring.
+        animateObject(gate, 1, 0.3, 0, time, "position"); // Move Gate up and down
+
+        // Animations for the front portal
+        animateObject(meshFront, 1, 0.3, 0, time, "position"); // Move Portal up and down
         animateObject(meshFront, 1, 1, 0, time, "rotation"); // Rotate Portal
-        // animateObject(meshFront, 1, 0.005, 0, 0.15*time, "scale"); // Adjust size of the Portal
+        // animateObject(meshFront, 1, 0.005, 0, 0.5 * time, "scale"); // Adjust size of the Portal
+
+        // Animation for the portal in the back (wip: we don't use the portal right now so we don't need the animations right now)
         // animateObject(meshBack, 1, 1, 0, time, "position"); // Move Portal up and down
         // animateObject(meshBack, 1, 0.005, 0, 0.15*time, "scale"); // Adjust size of the Portal
 
+        // Checks the position of the camera and the intersection with the hitboxes so it can switch the portals right in the next line
         checkIntersection();
-
         switchPortals();
     } 
+
+    // Renders the scene and the camera
     renderer.render( scene, camera );
 
+    // Sets the animation loop with the render function and request the animationframes with the animate function
     requestAnimationFrame(animate);
     renderer.setAnimationLoop( render );
 }
 
+// Checks the intersection with the hitboxes: It shoots raycasts and checks how many intersections it gets to find out where the camera is and from what direction it came from
 function checkIntersection (){
     const raycaster = new THREE.Raycaster();
 
@@ -444,6 +469,7 @@ function resetLogic(){
     };
 }
 
+// Switches the materials of the skyshpere and the portal depending what boolean is set.
 function switchPortals() {
 
     if (world_material == false) {
@@ -472,64 +498,62 @@ function switchPortals() {
         meshFront.material.side = THREE.DoubleSide;
     }
 
-    if ( portalBack_material == true ) {
-        meshBack.material = spaceMat;
-        meshBack.material.side = THREE.DoubleSide;
-    } else {
-        meshBack.material = realMat;
-        meshBack.material.side = THREE.DoubleSide;
-    }
+    // Not in use right now
+    // if ( portalBack_material == true ) {
+    //     meshBack.material = spaceMat;
+    //     meshBack.material.side = THREE.DoubleSide;
+    // } else {
+    //     meshBack.material = realMat;
+    //     meshBack.material.side = THREE.DoubleSide;
+    // }
 
 }
 
 
 // Render function
-
 function render( timestamp, frame ) {
+    // Checks if the ar mode is on, because the hittest doesn't work in vr. (We couldn't fix it, if we got it right it's because the hittest in vr works different)
     if (xr_mode == "ar") {  
-    if ( frame ) {
-        const referenceSpace = renderer.xr.getReferenceSpace();
-        const session = renderer.xr.getSession();
 
-        if ( hitTestSourceRequested === false ) {
-            session.requestReferenceSpace( 'viewer' ).then( function ( referenceSpace ) {
-            session.requestHitTestSource( { space: referenceSpace } ).then( function ( source ) {
-                hitTestSource = source;
-            } );
-            } );
-            session.addEventListener( 'end', function () {
-            hitTestSourceRequested = false;
-            hitTestSource = null;
-            } );
-            hitTestSourceRequested = true;
-        }
+    // Checks every frame if it found an intersection with realworld surfaces
+        if ( frame ) {
+            const referenceSpace = renderer.xr.getReferenceSpace();
+            const session = renderer.xr.getSession();
 
-        if ( hitTestSource ) {
-            const hitTestResults = frame.getHitTestResults( hitTestSource );
-            if ( hitTestResults.length ) {
-            const hit = hitTestResults[ 0 ];
-            reticle.visible = true;
-            reticle.matrix.fromArray( hit.getPose( referenceSpace ).transform.matrix );
-            } else {
-            reticle.visible = false;
+            if ( hitTestSourceRequested === false ) {
+                session.requestReferenceSpace( 'viewer' ).then( function ( referenceSpace ) {
+                session.requestHitTestSource( { space: referenceSpace } ).then( function ( source ) {
+                    hitTestSource = source;
+                } );
+                } );
+                session.addEventListener( 'end', function () {
+                hitTestSourceRequested = false;
+                hitTestSource = null;
+                } );
+                hitTestSourceRequested = true;
             }
-        }
+
+            // If it found an intersection it makes the hitmarker visible and gets the position result of the found coordinates so we can place objects there
+            if ( hitTestSource ) {
+                const hitTestResults = frame.getHitTestResults( hitTestSource );
+                if ( hitTestResults.length ) {
+                const hit = hitTestResults[ 0 ];
+                reticle.visible = true;
+                reticle.matrix.fromArray( hit.getPose( referenceSpace ).transform.matrix );
+                } else {
+                reticle.visible = false;
+                }
+            }
         }
     }
     
+    // set the values of the uniforms for the shader to animate it
+    realMat.uniforms.uTime.value += 0.01; 
+    realMat.uniforms.uResolution.value.set(
+        renderer.domElement.width,
+        renderer.domElement.height
+    );
 
-        // materialFront.uniforms.uTime.value += 0.01; 
-        // materialFront.uniforms.uResolution.value.set(
-        //     renderer.domElement.width,
-        //     renderer.domElement.height
-        // );
-    
-
-        // materialBack.uniforms.uTime.value += 0.01; 
-        // materialBack.uniforms.uResolution.value.set(
-        //     renderer.domElement.width,
-        //     renderer.domElement.height
-        // );
-
+    // render scene and camera
     renderer.render( scene, camera );
 }
