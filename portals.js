@@ -133,7 +133,7 @@ async function addObjects() {
     })
 
     // Generate Portal
-    generatePortal(0, 0, -0.3);
+    generatePortal(0, 0, -0.5);
 
     // Random Planet or Star Spawner
 
@@ -340,7 +340,7 @@ function animate() {
         } );
 
         // Jumps to here if the models are not jet loaded
-        // animateObject(gate.children[1], 1, 1, 0, -1.5*time, "rotation"); // Rotate Inner Ring. gate.children[0] is the Outer ring of the Gate model. gate.children[1] is the inner ring.
+        animateObject(gate.children[1], 1, 1, 0, -0.5*time, "rotation"); // Rotate Inner Ring. gate.children[0] is the Outer ring of the Gate model. gate.children[1] is the inner ring.
         // animateObject(gate, 1, 1, 0, time, "position"); // Move Gate up and down
         // animateObject(meshFront, 1, 1, 0, time, "position"); // Move Portal up and down
         animateObject(meshFront, 1, 1, 0, time, "rotation"); // Rotate Portal
