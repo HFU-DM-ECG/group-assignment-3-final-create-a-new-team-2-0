@@ -25,9 +25,9 @@ let portalFront, meshFront, portalBack, meshBack, realMat, spaceMat;
 
 
 // Defining booleans for switching the material
-let world_material = true;
-let portalFront_material = false;
-let portalBack_material = false;
+let world_material = false;
+let portalFront_material = true;
+// let portalBack_material = false;
 let cameFromFront = true;
 let cameFromBack = true;
 
@@ -140,7 +140,10 @@ async function addObjects() {
     })
 
     // Generate Portal with the given coordinates
-    generatePortal(0, 0, -0.5);
+    generatePortal(0, 0, -5);
+    generatePortal(1, 0, 0);
+    generatePortal(1, 0, 1);
+    generatePortal(0, 0, 2);
 
     // Random Planet or Star Spawner
     geometry = new THREE.Object3D();
