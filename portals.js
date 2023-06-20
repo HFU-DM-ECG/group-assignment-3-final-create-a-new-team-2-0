@@ -12,14 +12,14 @@ import fragTransparentPortal from "./shader/transparentPortal/fragmentShader.js"
 
 let container, camera, scene, renderer, geometry, spaceSphere, gate, time, controller, reticle;
 let hitFrontOut, hitFrontIn, hitBackOut, hitBackIn, hitCenter; 
-let portalFront, meshFront, materialFront, portalBack, meshBack, materialBack, realMat, spaceMat;
-let cameFromFront = true;
-let cameFromBack = true;
-let stencilRef = 1;
+let portalFront, meshFront, portalBack, meshBack, realMat, spaceMat;
 
 let world_material = true;
 let portalFront_material = false;
 let portalBack_material = false;
+let cameFromFront = true;
+let cameFromBack = true;
+let stencilRef = 1;
 
 // LoadingManager
 
@@ -224,15 +224,8 @@ function generatePortal(_posX, _posY, _posZ) {
     scene.add(meshFront);
 
     portalBack = new THREE.CircleGeometry( 1.3, 32 ); 
-    materialBack = new THREE.MeshBasicMaterial({color: 0xffffff});
 
-    materialBack.depthWrite = false;
-    materialBack.stencilWrite = true;
-    materialBack.stencilRef = stencilRef;
-    materialBack.stencilFunc = THREE.AlwaysStencilFunc;
-    materialBack.stencilZPass = THREE.ReplaceStencilOp;
-
-    meshBack = new THREE.Mesh(portalBack, materialBack); // Clones the predefined Phong material with full transparency
+    meshBack = new THREE.Mesh(portalBack, spaceMat); // Clones the predefined Phong material with full transparency
     meshBack.material.side = THREE.DoubleSide;
     meshBack.scale.set(0.16, 0.16, 0.16);
     meshBack.position.set(_posX, _posY, _posZ - portalDifference);
