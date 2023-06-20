@@ -260,7 +260,7 @@ function generatePortal(_posX, _posY, _posZ) {
         hitFrontOut.traverse((object)=>{
             if(object.material){
                 object.material.transparent = true;
-                object.material.opacity = 0.1;
+                object.material.opacity = 0.0;
                 object.material.side = THREE.DoubleSide;
             }
         });
@@ -278,7 +278,7 @@ function generatePortal(_posX, _posY, _posZ) {
         hitBackOut.traverse((object)=>{
             if(object.material){
                 object.material.transparent = true;
-                object.material.opacity = 0.1;
+                object.material.opacity = 0.0;
                 object.material.side = THREE.DoubleSide;
             }
         });
@@ -393,13 +393,14 @@ function animate() {
     renderer.setAnimationLoop( render );
 }
 
-// Checks the intersection with the hitboxes: It shoots raycasts and checks how many intersections it gets to find out where the camera is and from what direction it came from
+// Checks the intersection with the hitboxes: It shoots raycasts and checks how many intersections it gets to find out if the camera is inside the hitbox and from what direction it came from
 function checkIntersection (){
     const raycaster = new THREE.Raycaster();
 
-    raycaster.set(camera.position, new THREE.Vector3(1,1,1));
+    // Checks if the Camera is inside the Frontal Hitbox
+    raycaster.set(camera.position, new THREE.Vector3(1,1,1)); 
     const intersectsFrontOut = raycaster.intersectObject(hitFrontOut);
-    if (intersectsFrontOut.length %2 ===1) {
+    if (intersectsFrontOut.length %2 ===1) { // This checks if the intersections are exactly 1. This would mean that the Camera is inside the geometry. This only works if the hitboxes are double sided.
         if(world_material==true){
             cameFromFront = false;
         };
@@ -408,6 +409,8 @@ function checkIntersection (){
         };
         hitFrontOutLogic();
     }
+    
+    // Checks if the Camera is inside the Back Hitbox
     const intersectsBackOut = raycaster.intersectObject(hitBackOut);
     if (intersectsBackOut.length %2 ===1) {
         if(world_material==true){
@@ -418,12 +421,15 @@ function checkIntersection (){
         };
         hitBackOutLogic();
     }
+    
+    // Checks if the Camera is near the Portal
     const intersectsCenter = raycaster.intersectObject(hitCenter);
     if (intersectsCenter.length %2 ===1) {
         hitCenterLogic();
         console.log('camera is near the Portal');
     }
 
+    // Resets the Logic if the Camera is far enough away from the Portal. This prevents unwanted flips between the two states.
     if(intersectsCenter.length %2 !==1 && intersectsBackOut.length %2 !==1 && intersectsFrontOut.length %2 !==1) {
         resetLogic();
     }
@@ -432,11 +438,15 @@ function checkIntersection (){
 }
 
 function hitFrontOutLogic(){
-  
+    // Checks if the player went through both portals, comming from the real world.
+    // If the Worldspace is real, then going through the hitboxes of the Portal will change their respective variable to false.
+    // If both are false, then that means you went through the portal from the real world to space
+    // This works both ways (See hitBackOutLogic())
     if(cameFromBack==false && cameFromFront == false){
         world_material = false;
         portalFront_material = true;
     };
+
     if(cameFromBack==true && cameFromFront == true){
         world_material = true;
         portalFront_material = false;
@@ -455,12 +465,16 @@ function hitBackOutLogic(){
 }
 
 function hitCenterLogic(){
+    // This function is only for debugging.
     console.log('cameFromBack ' + cameFromBack);
     console.log('cameFromFront ' + cameFromFront);
     console.log('Portal ' + portalFront_material);
 }
 
 function resetLogic(){
+    // This logic is being applied when the player is not near the portal, nor inside the front hitbox nor the back one.
+    // It sets the "cameFrom" variables to the World_Material.
+    // That way the player can move towards a portal, but not through it, back up again and the variables will be set back.
     console.log('resetting Logic');
     if(world_material==true){
         cameFromFront = true;
