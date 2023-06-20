@@ -28,8 +28,8 @@ let portalFront, meshFront, portalBack, meshBack, realMat, spaceMat;
 let world_material = false;
 let portalFront_material = true;
 // let portalBack_material = false;
-let cameFromFront = true;
-let cameFromBack = true;
+let cameFromFront = false;
+let cameFromBack = false;
 
 
 let stencilRef = 1;
@@ -140,10 +140,7 @@ async function addObjects() {
     })
 
     // Generate Portal with the given coordinates
-    generatePortal(0, 0, -5);
-    generatePortal(1, 0, 0);
-    generatePortal(1, 0, 1);
-    generatePortal(0, 0, 2);
+    generatePortal(0, 0, -0.8);
 
     // Random Planet or Star Spawner
     geometry = new THREE.Object3D();
